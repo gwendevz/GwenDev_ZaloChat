@@ -70,7 +70,34 @@ export async function handleMessage(message, api) {
   const uid = message.data.uidFrom;
   const name = message.data.dName || "Không tên";
   const threadId = message.threadId;
+  if (uid) {
+    const [userRow] = await query("SELECT mute, mute_expire FROM users WHERE uid = ? LIMIT 1", [uid]);
+    if (userRow?.mute) {
+      const now = Date.now();
 
+      if (userRow.mute_expire && userRow.mute_expire < now) {
+        await query("UPDATE users SET mute = 0, mute_expire = NULL WHERE uid = ?", [uid]);
+      } else {
+        if (message.data?.cliMsgId && message.data?.msgId) {
+          try {
+            await api.deleteMessage({
+              threadId,
+              type: message.type,
+              data: {
+                cliMsgId: message.data.cliMsgId,
+                msgId: message.data.msgId,
+                uidFrom: uid
+              }
+            }, false);
+          } catch (err) {
+            console.error("Không thể xoá tin nhắn bị mute:", err.message);
+          }
+        }
+
+        return; 
+      }
+    }
+  }
   const groupInfo = await api.getGroupInfo(threadId);
   const groupData = groupInfo?.gridInfoMap?.[String(threadId)] || {};
   const threadName = groupData.name || "Không tên";
