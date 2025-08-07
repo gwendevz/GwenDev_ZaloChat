@@ -1,51 +1,42 @@
-# GwenDev_ZaloChat 🤖🇻🇳
+# GwenDev_ZaloChat
 
-Chatbot Zalo cá nhân được xây dựng bằng thư viện không chính thức [zca-js](https://tdung.gitbook.io/zca-js), tích hợp các tính năng tự động và chống spam, cùng với webhook thanh toán SEPay.
+Chatbot Zalo cá nhân được xây dựng bằng thư viện không chính thức [zca-js](https://tdung.gitbook.io/zca-js).
 
-> 🛑 **Lưu ý:** Sử dụng `zca-js` có thể vi phạm chính sách của Zalo. Project này chỉ dùng cho mục đích học tập / nghiên cứu.
+> 🛑 **Lưu ý:** Sử dụng `zca-js` có thể vi phạm chính sách của Zalo.
 
 ---
 
 ## 🚀 Tính năng chính
 
-- ✅ Đăng nhập bằng Cookie + IMEI
-- 🧠 Tự động:
-  - Gửi tin nhắn (`AutoSend`)
-  - Tải file (`AutoDown`)
-  - Tính tương tác theo ngày / tuần / tháng
-- 🚫 Chống spam, chống gửi link (`AntiSpam`, `AntiLink`)
-- 💳 Nhận webhook thanh toán từ **SEPay**
-- 📦 REST API qua Express + body-parser
-- 🔧 Quản lý cấu hình qua file
-
+- Lắng Nghe Từ Các Handle
+- Xử Lý Lệnh Qua Core/Commands & NoPrefix
+- Xử Lý Các Điều Kiện Tự Động Qua Auto/ & Anti/
+- Xử Lý Thanh Toán Tự Động Thông Qua Sepay
+- Tích Hợp AI GPT Từ https://openrouter.ai/
 ---
 
-## 📂 Cấu trúc thư mục
+## 📂 Cấu trúc thư mục mẫu
 
 ```
 GwenDev_ZaloChat/
 ├── App/
-│   ├── Settings.js         # IMEI, user-agent, cookie
-│   ├── BotInstance.js      # Lưu phiên bản Zalo API toàn cục
-│   └── Database.js         # Cấu hình MySQL (nếu dùng)
+│   ├── AutoSend.json       # Setup AutoSend
+│   ├── Cookie.json         # Setup Cookie Zalo
+│   ├── Settings.js         # Setup Imei & UserAgent
+│   ├── BotInstance.js      # Api Xử Lý Sepay
+│   └── Database.js         # Setup Database MySQL
 ├── Auto/
-│   ├── AutoDown.js         # Tự động tải
-│   ├── AutoSend.js         # Tự động gửi tin nhắn
-│   ├── TuongTacNgay.js     # Top tương tác trong ngày
-│   ├── TuongTacTuan.js     # Top tương tác trong tuần
-│   └── TuongTacThang.js    # Top tương tác trong tháng
+│   ├── AutoDown.js         # Auto Downloads Từ 10+ Nển Tảng
+│   ├── AutoSend.js         # AutoSend Text / Audio / File / Image
+│   ├── TuongTacNgay.js     # Auto Send Top Day
+│   ├── TuongTacTuan.js     # Auto Send Top Week
+│   └── TuongTacThang.js    # Auto Send Top Month
 ├── Anti/
-│   ├── AntiSpam.js         # Chống spam tin nhắn
-│   └── AntiLink.js         # Chống gửi link
-├── Routes/
-│   ├── checkPaymentRouter.js
-│   └── sepayWebhook.js
+│   ├── AntiSpam.js         # Cấm Spam
+│   └── AntiLink.js         # Cấm Gửi Link
 ├── Handlers/
-│   └── Core.js             # Logic xử lý event chính
-├── Utils/
-│   └── Logger.js           # Ghi log ra file hoặc console
-├── src/                    # Tuỳ chọn thêm
-├── index.js / zalo.js      # Entry point (main file)
+│   └── Core.js             # Logic Xử Lý Event 
+├── zalo.js                 # Điều Hướng Các File
 └── README.md
 ```
 
@@ -75,23 +66,22 @@ bun install
 
 ## 🔧 Cấu hình
 
-### `App/Settings.js`
+### `App/Settings.js` 
 ```js
 export const settings = {
-  imei: "YOUR_IMEI",
-  cookie: "YOUR_COOKIE_STRING",
-  userAgent: "YOUR_USER_AGENT"
+  imei: "YOUR_IMEI",  
+  userAgent: "YOUR_USER_AGENT" 
 };
 ```
 
-### `App/Cookie.json` (tuỳ chọn nếu cần tách riêng)
+### `App/Cookie.json`
 ```json
 {
-  "cookie": "YOUR_COOKIE_STRING"
+    
 }
 ```
 
-### `App/Database.js` (nếu dùng MySQL)
+### `App/Database.js` 
 ```js
 module.exports = {
   host: "localhost",
@@ -106,7 +96,7 @@ module.exports = {
 ## ▶️ Chạy bot
 
 ```bash
-node zalo.js
+node .
 ```
 
 ---
@@ -115,15 +105,15 @@ node zalo.js
 
 | Route         | Mô tả                         |
 |---------------|-------------------------------|
-| `/`           | Check thanh toán (SEPay)      |
-| `/sepay`      | Nhận webhook từ SEPay Gateway |
+| `/`           | Check thanh toán (SePay)      |
+| `/Router`     | Nhận webhook từ SePay Gateway |
 
 ---
 
 ## 📝 Ghi chú
 
-- Dữ liệu tương tác, anti-spam, top tháng có thể mở rộng với MySQL
-- `Logger.js` hỗ trợ ghi log có màu, file, theo tag (auto, error, login,...)
+- Api Hook Sepay: https:/domain/sepay_webhook
+- 
 - Hệ thống modular dễ mở rộng cho tính năng như auto-reply theo từ khoá
 
 ---
