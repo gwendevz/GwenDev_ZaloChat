@@ -1,16 +1,6 @@
 import { query } from "../App/Database.js";
-import { log } from "../Utils/Logger.js";
 
 const WHITELISTED_DOMAINS = ["gwendev.com"];
-
-// Regex bắt tất cả link và domain (kể cả thiếu giao thức)
-const LINK_REGEX = /\b((https?:\/\/)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/\S*)?)/gi;
-
-// Danh sách hậu tố domain cần chặn
-const BLOCKED_SUFFIXES = [
-  ".com", ".net", ".org", ".xyz", ".cn", ".top", ".tk", ".ml", ".ga",
-  ".buzz", ".shop", ".cf", ".info", ".biz", ".online", ".store", ".live", ".tech", ".club"
-];
 
 async function isAntiLinkEnabled(threadId) {
   const rows = await query("SELECT status, thread FROM settings WHERE cmd = 'antilink' LIMIT 1");
@@ -18,68 +8,35 @@ async function isAntiLinkEnabled(threadId) {
 
   const { status, thread } = rows[0];
   let list = [];
-  try { list = thread ? JSON.parse(thread) : []; } catch {}
+
+  try {
+    list = thread ? JSON.parse(thread) : [];
+  } catch (err) {
+    }
 
   const entry = list.find(([id]) => id === threadId);
-  return entry ? entry[2] === "on" : status === 1;
+  if (entry) return entry[2] === "on";
+  return status === 1;
 }
 
 function isWhitelistedLink(href = "") {
   try {
-    const url = new URL(href.startsWith("http") ? href : `https://${href}`);
+    const url = new URL(href);
     const domain = url.hostname.replace(/^www\./, "");
-    return url.protocol === "https:" && WHITELISTED_DOMAINS.includes(domain);
-  } catch {
-    return false;
-  }
-}
-
-function containsBlockedSuffix(text = "") {
-  const lc = text.toLowerCase();
-  return BLOCKED_SUFFIXES.some(suffix => lc.includes(suffix));
-}
-
-function containsBlacklistedDomain(text = "") {
-  const matches = [...text.matchAll(LINK_REGEX)];
-
-  for (const match of matches) {
-    const raw = match[0].toLowerCase();
-    // Bỏ qua nếu trong whitelist
-    if (isWhitelistedLink(raw)) continue;
-
-    // Nếu domain có đuôi nằm trong blacklist thì chặn
-    const suffixMatch = BLOCKED_SUFFIXES.find(suffix => raw.endsWith(suffix) || raw.includes(suffix + "/"));
-    if (suffixMatch) return raw;
-  }
-
-  return null;
-}
-
-async function handleLinkViolation(api, threadId, userId, name, type, data, content = "") {
-  try {
-    if (data.cliMsgId && data.msgId) {
-      await api.deleteMessage({
-        threadId,
-        type,
-        data: { cliMsgId: data.cliMsgId, msgId: data.msgId, uidFrom: userId }
-      }, false);
-    }
-
-    log(`[ANTI] - Bị chặn: ${content || "[không rõ nội dung]"}`);
-
-    const msgBody = `@${name}, để gwen nói cho nghe này. gwen đang bật chặn link nên đừng gửi link nữa nha!`;
-    await api.sendMessage({
-      msg: msgBody,
-      mentions: [{
-        uid: userId,
-        pos: msgBody.indexOf(`@${name}`),
-        len: name.length + 1
-      }]
-    }, threadId, type);
-
+    return WHITELISTED_DOMAINS.includes(domain);
   } catch (err) {
-    log("[ANTI] - Lỗi khi xử lý:", err);
+     return false;
   }
+}
+// TODO đụ mẹ gwendev
+const URL_REGEX = /(?:https?:\/\/|www\.|ftp\.)\S+|(?<!\w)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?!\w)/gi;
+
+function extractUrls(text) {
+  if (typeof text !== 'string') {
+    return [];
+  }
+  const matches = text.match(URL_REGEX);
+  return matches || [];
 }
 
 export function startAntiLink(api) {
@@ -89,25 +46,72 @@ export function startAntiLink(api) {
     const name = msg.senderName || "Người dùng";
     const type = msg.type;
     const data = msg.data;
+    const msgBody = String(msg.data?.content || ''); 
 
     if (!userId || !data) return;
-    if (!(await isAntiLinkEnabled(threadId))) return;
 
-    // Case 1: Loại link "chat.recommended"
+    const allow = await isAntiLinkEnabled(threadId);
+    if (!allow) {
+     return;
+    }
+
+    let containsUnwhitelistedLink = false;
+    let detectedLink = null;
+
     if (data.msgType === "chat.recommended" && data.content?.action === "recommened.link") {
       const link = data.content?.href;
-      if (!isWhitelistedLink(link)) {
-        return await handleLinkViolation(api, threadId, userId, name, type, data, link);
+      if (link) {
+        if (!isWhitelistedLink(link)) {
+          containsUnwhitelistedLink = true;
+          detectedLink = link;
+           } else {
+         }
       }
     }
 
-    // Case 2: Text thường
-    const text = data.body || data.content?.text || data.message?.body || "";
-    if (text) {
-      const badMatch = containsBlacklistedDomain(text);
-      if (badMatch) {
-        return await handleLinkViolation(api, threadId, userId, name, type, data, badMatch);
+    
+    if (msgBody && !containsUnwhitelistedLink) {
+      const urlsInBody = extractUrls(msgBody);
+      if (urlsInBody.length > 0) {
+        for (const url of urlsInBody) {
+          if (!isWhitelistedLink(url)) {
+            containsUnwhitelistedLink = true;
+            detectedLink = url;
+            break; 
+          } else {
+           
+          }
+        }
       }
+    }
+
+    if (containsUnwhitelistedLink) {
+      try {
+       
+        if (data.cliMsgId && data.msgId) {
+          await api.deleteMessage({
+            threadId,
+            type,
+            data: {
+              cliMsgId: data.cliMsgId,
+              msgId: data.msgId,
+              uidFrom: userId
+            }
+          }, false);
+        } else {
+        }
+
+        const responseMsg = `@${name}, để gwen nói cho nghe này. giờ gwen đang được bật chặn gửi link nên là chú em đừng có gửi linh tinh. `; 
+      await api.sendMessage({               
+          msg: responseMsg,
+          mentions: [{
+            uid: userId,
+            pos: responseMsg.indexOf(`@${name}`),
+            len: name.length + 1
+          }]
+        }, threadId, type);
+        } catch (err) {
+         }
     }
   });
 }
