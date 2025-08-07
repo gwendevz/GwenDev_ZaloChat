@@ -14,7 +14,7 @@ import {
 
 // ============== LINK ==============//
 const SUPPORTED_LINKS = [
-    /tiktok\.com/, /douyin\.com/, /capcut\.com/, /threads\.net/, /instagram\.com/, /facebook\.com/, /espn\.com/,
+    /tiktok\.com/, /douyin\.com/, /capcut\.com/, /threads\.com/, /instagram\.com/, /facebook\.com/, /espn\.com/,
     /pinterest\.com/, /imdb\.com/, /imgur\.com/, /ifunny\.co/, /izlesene\.com/, /reddit\.com/, /youtube\.com/,
     /youtu\.be/, /twitter\.com/, /x\.com/, /vimeo\.com/, /snapchat\.com/, /bilibili\.com/, /dailymotion\.com/,
     /sharechat\.com/, /likee\.video/, /linkedin\.com/, /tumblr\.com/, /hipi\.co\.in/, /telegram\.org/,
@@ -54,14 +54,20 @@ export function startAutoDown(api) {
         const title = typeof msg.data?.content?.title === "string" ? msg.data.content.title.trim() : "";
         const bodyText = typeof msg.message?.body === "string" ? msg.message.body.trim() : "";
         const body = content || bodyText || href || title;
-        if (!body || !/^https?:\/\/\S+/.test(body )) return;
+        if (!body || !/^https?:\/\/\S+/.test(body  )) return;
         if (!SUPPORTED_LINKS.some(rx => rx.test(body))) return;
 
         const allow = await isAutoDownEnabled(threadId);
         if (!allow) return;
- log(`[URL] Get Link: ${body}`, "url");
+        log(`[URL] Get Link: ${body}`, "url");
         try {
-            const res = await axios.get(`https://api.zeidteam.xyz/media-downloader/atd2?url=${encodeURIComponent(body )}`);
+            let apiUrl;
+            if (/instagram\.com|threads\.net|threads\.com/.test(body)) {
+                apiUrl = `https://kemapis.eu.org/api/instagram/media?url=${encodeURIComponent(body )}`;
+            } else {
+                apiUrl = `https://api.zeidteam.xyz/media-downloader/atd2?url=${encodeURIComponent(body )}`;
+            }
+            const res = await axios.get(apiUrl);
             const data = res.data;
 
             if (!data || !Array.isArray(data.medias) || data.medias.length === 0) {
@@ -391,8 +397,9 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
-            // ============== INSTAGRAM ==============//
-            if (["instagram"].includes(source) || /instagram\.com/.test(body)) {
+             // ============== INSTAGRAM & THREADS ==============//
+            if (["instagram", "threads"].includes(source) || /instagram\.com|threads\.net|threads\.com/.test(body)) {
+                const platform = /threads/.test(body) ? "𝐓𝐡𝐫𝐞𝐚𝐝𝐬" : "𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦";
                 const hasVideo = data.medias.some(m => m.type === "video");
                 const isImageOnly = !hasVideo;
 
@@ -402,7 +409,7 @@ export function startAutoDown(api) {
                         if (media.type === "image" && media.url) {
                             try {
                                 const ext = path.extname(media.url.split("?")[0]) || ".jpg";
-                                const imagePath = path.join(cacheDir, `ttimg_${Date.now()}_${index}${ext}`);
+                                const imagePath = path.join(cacheDir, `media_${Date.now()}_${index}${ext}`);
                                 await downloadFile(media.url, imagePath);
                                 attachments.push(imagePath);
                             } catch (err) {
@@ -413,39 +420,19 @@ export function startAutoDown(api) {
 
                     if (attachments.length > 0) {
                         await api.sendMessage({
-                            msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦     \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
+                            msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: ${platform}     \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
                             attachments,
-                            ttl: 500_000 
+                            ttl: 500_000
                         }, threadId, threadType);
                         cleanupFiles(attachments);
-                    }
-
-                    const audio = data.medias.find(m => m.type === "audio" && m.url);
-                    if (audio?.url) {
-                        const tempPath = path.join(cacheDir, `ttaudio_${Date.now()}`);
-                        const aacPath = `${tempPath}.aac`;
-                        try {
-                            await downloadFile(audio.url, tempPath);
-                            await convertToAac(tempPath, aacPath);
-                            const uploaded = await api.uploadAttachment([aacPath], threadId, threadType);
-                            const voiceData = uploaded?.[0];
-                            if (voiceData?.fileUrl && voiceData?.fileName) {
-                                const voiceUrl = `${voiceData.fileUrl}/${voiceData.fileName}`;
-                                await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
-                            }
-                        } catch (err) {
-                            log.warn(`[URL] Error Audio: ${err.message}`);
-                        } finally {
-                            cleanupFiles([tempPath, aacPath]);
-                        }
                     }
                     return;
                 }
 
-                const video = data.medias.find(m => m.type === "video" && m.quality?.includes("no_watermark")) || data.medias.find(m => m.type === "video");
+                const video = data.medias.find(m => m.type === "video");
                 if (!video?.url) return;
 
-                const tmpPath = path.join(cacheDir, `ttvid_${Date.now()}.mov`);
+                const tmpPath = path.join(cacheDir, `media_vid_${Date.now()}.mov`);
                 let width = 720, height = 1280, duration = 0;
                 try {
                     await downloadFile(video.url, tmpPath);
@@ -462,87 +449,7 @@ export function startAutoDown(api) {
                 await api.sendVideo({
                     videoUrl: video.url,
                     thumbnailUrl: video.thumbnail || data.thumbnail || video.url,
-                    msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦     \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
-                    width,
-                    height,
-                    duration: duration * 1000,
-                    ttl: 500_000
-                }, threadId, threadType);
-                return;
-            }
-              
-                // ============== THREADS ==============//
-            if (["threads"].includes(source) || /threads\.net/.test(body)) {
-                const hasVideo = data.medias.some(m => m.type === "video");
-                const isImageOnly = !hasVideo;
-
-                if (isImageOnly) {
-                    const attachments = [];
-                    for (const [index, media] of data.medias.entries()) {
-                        if (media.type === "image" && media.url) {
-                            try {
-                                const ext = path.extname(media.url.split("?")[0]) || ".jpg";
-                                const imagePath = path.join(cacheDir, `ttimg_${Date.now()}_${index}${ext}`);
-                                await downloadFile(media.url, imagePath);
-                                attachments.push(imagePath);
-                            } catch (err) {
-                                log.warn(`[URL] Error Image: ${err.message}`);
-                            }
-                        }
-                    }
-
-                    if (attachments.length > 0) {
-                        await api.sendMessage({
-                            msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐓𝐡𝐫𝐞𝐚𝐝𝐬       \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
-                            attachments,
-                            ttl: 500_000 
-                        }, threadId, threadType);
-                        cleanupFiles(attachments);
-                    }
-
-                    const audio = data.medias.find(m => m.type === "audio" && m.url);
-                    if (audio?.url) {
-                        const tempPath = path.join(cacheDir, `ttaudio_${Date.now()}`);
-                        const aacPath = `${tempPath}.aac`;
-                        try {
-                            await downloadFile(audio.url, tempPath);
-                            await convertToAac(tempPath, aacPath);
-                            const uploaded = await api.uploadAttachment([aacPath], threadId, threadType);
-                            const voiceData = uploaded?.[0];
-                            if (voiceData?.fileUrl && voiceData?.fileName) {
-                                const voiceUrl = `${voiceData.fileUrl}/${voiceData.fileName}`;
-                                await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
-                            }
-                        } catch (err) {
-                            log.warn(`[URL] Error Audio: ${err.message}`);
-                        } finally {
-                            cleanupFiles([tempPath, aacPath]);
-                        }
-                    }
-                    return;
-                }
-
-                const video = data.medias.find(m => m.type === "video" && m.quality?.includes("no_watermark")) || data.medias.find(m => m.type === "video");
-                if (!video?.url) return;
-
-                const tmpPath = path.join(cacheDir, `ttvid_${Date.now()}.mov`);
-                let width = 720, height = 1280, duration = 0;
-                try {
-                    await downloadFile(video.url, tmpPath);
-                    const metadata = await getVideoMetadata(tmpPath);
-                    width = metadata.width;
-                    height = metadata.height;
-                    duration = metadata.duration;
-                } catch (err) {
-                    log.warn(`[URL] Error Video Metadata: ${err.message}`);
-                } finally {
-                    cleanupFiles([tmpPath], 0);
-                }
-
-                await api.sendVideo({
-                    videoUrl: video.url,
-                    thumbnailUrl: video.thumbnail || data.thumbnail || video.url,
-                    msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐓𝐡𝐫𝐞𝐚𝐝𝐬       \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
+                    msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: ${platform}     \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
                     width,
                     height,
                     duration: duration * 1000,
