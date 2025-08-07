@@ -1,4 +1,4 @@
-// import cần thiết
+
 import fs from "fs";
 import fsp from "fs/promises";
 import axios from "axios";
@@ -6,13 +6,11 @@ import { createCanvas, loadImage } from "canvas";
 import path from "path";
 import { query } from "../../App/Database.js";
 
-// đường dẫn
 const bgPath = path.resolve("Data", "Cache", "GhepDoi", "ghepdoi.jpg");
 const weddingPath = path.resolve("Data", "Cache", "GhepDoi", "giaykethon.jpg");
 const cacheDir = path.resolve("Data", "Cache", "GhepDoi");
 if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
-// crop avatar hình tròn
 async function resizeAndCropCircle(image, size) {
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext("2d");
@@ -24,7 +22,6 @@ async function resizeAndCropCircle(image, size) {
   return canvas;
 }
 
-// ghép avatar vào background
 async function combineAvatars(avatarPaths, outputPath) {
   const images = await Promise.all(avatarPaths.map(p => loadImage(p)));
   const resized = await Promise.all(images.map(img => resizeAndCropCircle(img, 50)));
@@ -38,11 +35,10 @@ async function combineAvatars(avatarPaths, outputPath) {
   fs.writeFileSync(outputPath, buffer);
 }
 
-// điền thông tin vào giấy kết hôn
 async function fillWeddingCertificate(profile1, profile2) {
   const outputPath = path.resolve("Data", "Cache", "GhepDoi", `giaykethon_filled_${Date.now()}.jpg`);
 
-  const canvas = createCanvas(640, 525); // Kích thước ảnh giaykethon.jpg
+  const canvas = createCanvas(640, 525); 
   const ctx = canvas.getContext("2d");
 
   const img = await loadImage(weddingPath);
@@ -51,11 +47,9 @@ async function fillWeddingCertificate(profile1, profile2) {
   ctx.font = "14px Arial";
   ctx.fillStyle = "black";
 
-  // Lấy tên từ profile
   const name1 = profile1.displayName || profile1.zaloName || profile1.username || "Zalo";
   const name2 = profile2.displayName || profile2.zaloName || profile2.username || "Zalo";
 
-  // Thông tin người chồng (bên trái)
   ctx.fillText(name1, 190, 190); // Họ và tên chồng
   ctx.fillText("30/11/2000", 190, 210); // Ngày, tháng, năm sinh chồng (mặc định)
   ctx.fillText("Kinh", 130, 230); // Dân tộc chồng
@@ -73,13 +67,11 @@ async function fillWeddingCertificate(profile1, profile2) {
   ctx.fillText("88888888", 470, 285); // Số Giấy CMND/Hộ chiếu vợ
   ctx.fillText(name2, 460, 350); // Chữ ký của vợ
 
-  // Thông tin đăng ký (ngày hiện tại)
   const today = new Date();
   ctx.fillText(today.getDate().toString().padStart(2, '0'), 430, 395); // Ngày đăng ký
   ctx.fillText((today.getMonth() + 1).toString().padStart(2, '0'), 490, 395); // Tháng đăng ký
   ctx.fillText(today.getFullYear().toString(), 540, 395); // Năm đăng ký
 
-  // Cán bộ tư pháp hộ tịch và Chủ tịch
   ctx.fillText("gwendev", 150, 490); // Cán bộ Tư pháp hộ tịch
   ctx.fillText("AnhDuc", 450, 490); // Chủ tịch
 
@@ -88,7 +80,6 @@ async function fillWeddingCertificate(profile1, profile2) {
   return outputPath;
 }
 
-// câu chúc theo tỉ lệ
 function getLoveMessage(percent) {
   if (percent >= 90) return "Hai bạn là cặp đôi hoàn hảo, định mệnh sắp gọi tên!";
   if (percent >= 80) return "Tình yêu này đẹp như mơ, hãy nắm lấy nhé!";
@@ -208,8 +199,6 @@ export default {
         threadId,
         type
       );
-
-      // ❤️ Nếu hợp > 50%, gửi giấy kết hôn đã điền thông tin
       if (compatibility > 50) {
         if (fs.existsSync(weddingPath)) {
           const filledWeddingPath = await fillWeddingCertificate(profile1, profile2);
@@ -221,7 +210,6 @@ export default {
             threadId,
             type
           );
-          // Xóa file tạm sau khi gửi
           await fsp.unlink(filledWeddingPath).catch(() => {});
         }
       }
