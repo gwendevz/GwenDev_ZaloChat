@@ -136,4 +136,4 @@ Dự án này sử dụng license `MIT`. Bạn có thể tự do fork, chỉnh s
 
 **GwenDev**  
 📬 GitHub: [gwendevz](https://github.com/gwendevz)  
-💬 Dự án chatbot cá nhân cho Zalo
+
