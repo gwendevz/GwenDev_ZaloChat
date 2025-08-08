@@ -1,0 +1,153 @@
+<%- include('partials/header', { title: 'Commands' }) %>
+
+<div class="page-header fade-in">
+    <h1><i class="fas fa-terminal"></i> Commands</h1>
+    <p>Quản lý các lệnh của Bot Zalo</p>
+</div>
+
+<div class="table-container fade-in">
+    <div class="table-header">
+        <h3><i class="fas fa-list"></i> Danh sách Commands (<%= commands.length %>)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên lệnh</th>
+                    <th>Mô tả</th>
+                    <th>Quyền hạn</th>
+                    <th>Cooldown</th>
+                    <th>Alias</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% commands.forEach((cmd, index) => { %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td><code><%= cmd.name %></code></td>
+                    <td><%= cmd.description || 'Không có mô tả' %></td>
+                    <td>
+                        <% if (cmd.role === 0) { %>
+                            <span class="badge badge-info">User</span>
+                        <% } else if (cmd.role === 1) { %>
+                            <span class="badge badge-warning">Owner</span>
+                        <% } else if (cmd.role === 2) { %>
+                            <span class="badge badge-danger">Admin</span>
+                        <% } %>
+                    </td>
+                    <td><%= cmd.cooldown || 0 %>s</td>
+                    <td>
+                        <% if (cmd.aliases && cmd.aliases.length > 0) { %>
+                            <%= cmd.aliases.join(', ') %>
+                        <% } else { %>
+                            <span class="text-muted">Không có</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editCommand('<%= cmd.name %>')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="editCommandModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Chỉnh sửa Command</h3>
+        </div>
+        <form id="editCommandForm">
+            <div class="form-group">
+                <label class="form-label">Tên lệnh</label>
+                <input type="text" id="cmdName" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả</label>
+                <textarea id="cmdDescription" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quyền hạn</label>
+                <select id="cmdRole" class="form-control">
+                    <option value="0">User</option>
+                    <option value="1">Owner</option>
+                    <option value="2">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cooldown (giây)</label>
+                <input type="number" id="cmdCooldown" class="form-control" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Alias (cách nhau bởi dấu phẩy)</label>
+                <input type="text" id="cmdAliases" class="form-control" placeholder="alias1, alias2, alias3">
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-close">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="saveCommand()">
+                <i class="fas fa-save"></i> Lưu
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCommand = null;
+
+function editCommand(commandName) {
+    const commands = <%- JSON.stringify(commands) %>;
+    currentCommand = commands.find(cmd => cmd.name === commandName);
+    
+    if (!currentCommand) return;
+    
+    document.getElementById('cmdName').value = currentCommand.name;
+    document.getElementById('cmdDescription').value = currentCommand.description || '';
+    document.getElementById('cmdRole').value = currentCommand.role || 0;
+    document.getElementById('cmdCooldown').value = currentCommand.cooldown || 0;
+    document.getElementById('cmdAliases').value = currentCommand.aliases ? currentCommand.aliases.join(', ') : '';
+    
+    PanelUtils.showModal(document.getElementById('editCommandModal'));
+}
+
+function saveCommand() {
+    if (!currentCommand) return;
+    
+    const formData = {
+        name: currentCommand.name,
+        description: document.getElementById('cmdDescription').value,
+        role: parseInt(document.getElementById('cmdRole').value),
+        cooldown: parseInt(document.getElementById('cmdCooldown').value),
+        aliases: document.getElementById('cmdAliases').value.split(',').map(a => a.trim()).filter(a => a)
+    };
+    
+    PanelUtils.showLoading();
+    
+    PanelUtils.ajax('/api/commands/update', {
+        method: 'POST',
+        data: formData
+    })
+    .then(response => {
+        PanelUtils.hideLoading();
+        if (response.success) {
+            PanelUtils.showNotification('Cập nhật command thành công!', 'success');
+            PanelUtils.hideModal(document.getElementById('editCommandModal'));
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            PanelUtils.showNotification('Lỗi: ' + response.message, 'error');
+        }
+    })
+    .catch(error => {
+        PanelUtils.hideLoading();
+        PanelUtils.showNotification('Lỗi kết nối: ' + error.message, 'error');
+    });
+}
+</script>
+
+<%- include('partials/footer') %>
+

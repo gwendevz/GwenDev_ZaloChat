@@ -1,0 +1,105 @@
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<div class="page-header fade-in">
+    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+    <p>GwenDev.Com</p>
+</div>
+
+<div class="stats-grid fade-in">
+    <div class="stat-card">
+        <div class="icon commands">
+            <i class="fas fa-terminal"></i>
+        </div>
+        <h3><%= stats.totalCommands %></h3>
+        <p>Tổng Commands</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon groups">
+            <i class="fas fa-users"></i>
+        </div>
+        <h3><%= stats.totalGroups %></h3>
+        <p>Tổng Groups</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon users">
+            <i class="fas fa-user"></i>
+        </div>
+        <h3><%= stats.totalUsers %></h3>
+        <p>Tổng Users</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon money">
+            <i class="fas fa-coins"></i>
+        </div>
+        <h3><%= new Intl.NumberFormat('vi-VN').format(stats.totalMoney) %> VNĐ</h3>
+        <p>Tổng Nạp</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon uptime">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h3 id="uptime-display"><%= stats.uptime %></h3>
+        <p>Thời gian Online</p>
+    </div>
+</div>
+
+<div class="table-container fade-in">
+    <div class="table-header">
+        <h3><i class="fas fa-info-circle"></i> Thông tin Bot</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <tbody>
+                <tr>
+                    <td><strong>Prefix Bot</strong></td>
+                    <td><code><%= botInfo.prefix %></code></td>
+                </tr>
+                <tr>
+                    <td><strong>Trạng thái</strong></td>
+                    <td><span class="badge badge-success">Online</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Thời gian khởi động</strong></td>
+                    <td><%= botInfo.startTime %></td>
+                </tr>
+                <tr>
+                    <td><strong>Phiên bản</strong></td>
+                    <td>v1.0.9</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let startTime = <%= botInfo.startTimeStamp %>;
+setInterval(() => {
+    const now = Date.now();
+    const uptime = Math.floor((now - startTime) / 1000);
+    document.getElementById('uptime-display').textContent = formatUptime(uptime);
+}, 1000);
+
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    } else {
+        return `${secs}s`;
+    }
+}
+</script>
+
+<%- include('partials/footer') %>
+

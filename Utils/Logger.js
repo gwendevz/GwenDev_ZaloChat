@@ -19,7 +19,7 @@ async function Logger() {
   console.log(chalk.gray("═══════════════════════════════════════════════════════════════════"));
   console.log("» " + chalk.blueBright("Author  : ") + chalk.white("GwenDev"));
   console.log("» " + chalk.blueBright("Zalo    : ") + chalk.underline("0334371905"));
-  console.log("» " + chalk.blueBright("Version : ") + chalk.underline("1.0.7"));
+  console.log("» " + chalk.blueBright("Version : ") + chalk.underline("1.0.9"));
   console.log(chalk.gray("═══════════════════════════════════════════════════════════════════\n"));
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "zl-node",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "description": "",
   "main": "zalo.js",
   "scripts": {
@@ -25,6 +25,7 @@
     "mysql2": "^3.14.3",
     "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
+    "socket.io": "^4.8.1",
     "zca-js": "^2.0.0-beta.25"
   }
 }

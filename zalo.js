@@ -14,32 +14,12 @@ import { startTopNgay } from "./Auto/TuongTacNgay.js";
 import { startTopTuan } from "./Auto/TuongTacTuan.js";
 import { startTopThang } from "./Auto/TuongTacThang.js";
 import { setApiInstance } from "./App/BotInstance.js";
-import { query } from "./App/Database.js"; // <-- Thêm dòng này
+import { query } from "./App/Database.js";
 import { updatesql } from "./Database/Update.js";
+import "./server.js"; 
 
 await Logger();
 await updatesql();
-try {
-  const columns = await query(`
-    SELECT COLUMN_NAME 
-    FROM INFORMATION_SCHEMA.COLUMNS 
-    WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('mute', 'mute_expire');
-  `);
-
-  const existingCols = columns.map(col => col.COLUMN_NAME);
-
-  if (!existingCols.includes('mute')) {
-    await query(`ALTER TABLE users ADD COLUMN mute TINYINT(1) DEFAULT 0`);
-    log("[DB] Đã thêm cột 'mute' vào bảng users.", "db");
-  }
-
-  if (!existingCols.includes('mute_expire')) {
-    await query(`ALTER TABLE users ADD COLUMN mute_expire BIGINT DEFAULT NULL`);
-    log("[DB] Đã thêm cột 'mute_expire' vào bảng users.", "db");
-  }
-} catch (e) {
-  log(`[DB] Lỗi khi kiểm tra hoặc thêm cột: ${e.message}`, "error");
-}
 
 const zalo = new Zalo({
   selfListen: false,
@@ -73,7 +53,7 @@ try {
   log("[SEPAY] - Settings Banking.", "auto");
   log("[API] - Settings Api.", "auto");
   log("[LOGIN] - Settings Login.", "auto");
-
+ 
   const app = express();
   const PORT = process.env.PORT || 80;
 
@@ -83,6 +63,7 @@ try {
 
   app.listen(PORT, () => {
     log(`[PORT] Client Zalo On Port: ${PORT}`, "new");
+    log(`[PORT] Website Zalo On Port: 3000`, "new");
   });
 
 } catch (err) {

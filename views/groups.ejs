@@ -1,0 +1,118 @@
+<%- include('partials/header', { title: 'Groups' }) %>
+
+<div class="page-header fade-in">
+    <h1><i class="fas fa-users"></i> Groups</h1>
+    <p>Quản Lý Grouo</p>
+</div>
+
+<div class="table-container fade-in">
+    <div class="table-header">
+        <h3><i class="fas fa-list"></i> Danh sách Groups (<%= groups.length %>)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Group ID</th>
+                    <th>Tên Group</th>
+                    <th>Thành viên</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tham gia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (groups.length === 0) { %>
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666;">
+                        <i class="fas fa-inbox"></i> Chưa có group nào
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% groups.forEach((group, index) => { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><code><%= group.threadId || group.id %></code></td>
+                        <td><%= group.name || 'Không rõ tên' %></td>
+                        <td><%= group.memberCount || 'N/A' %></td>
+                        <td>
+                            <% if (group.isActive !== false) { %>
+                                <span class="badge badge-success">Hoạt động</span>
+                            <% } else { %>
+                                <span class="badge badge-danger">Không hoạt động</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <%= group.joinedAt ? new Date(group.joinedAt).toLocaleDateString('vi-VN') : 'N/A' %>
+                        </td>
+                        <td>
+                           
+                        </td>
+                    </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="groupDetailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-users"></i> Chi tiết Group</h3>
+        </div>
+        <div id="groupDetailsContent">
+            <div class="spinner"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-close">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewGroupDetails(groupId) {
+    const modal = document.getElementById('groupDetailsModal');
+    const content = document.getElementById('groupDetailsContent');
+    
+    content.innerHTML = '<div class="spinner"></div>';
+    PanelUtils.showModal(modal);
+    
+    PanelUtils.ajax(`/api/groups/${groupId}`)
+        .then(response => {
+            if (response.success) {
+                const group = response.data;
+                content.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">Group ID</label>
+                        <input type="text" class="form-control" value="${group.threadId || group.id}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tên Group</label>
+                        <input type="text" class="form-control" value="${group.name || 'Không rõ tên'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Số thành viên</label>
+                        <input type="text" class="form-control" value="${group.memberCount || 'N/A'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Trạng thái</label>
+                        <input type="text" class="form-control" value="${group.isActive !== false ? 'Hoạt động' : 'Không hoạt động'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngày tham gia</label>
+                        <input type="text" class="form-control" value="${group.joinedAt ? new Date(group.joinedAt).toLocaleDateString('vi-VN') : 'N/A'}" readonly>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `<p style="color: red;">Lỗi: ${response.message}</p>`;
+            }
+        })
+        .catch(error => {
+            content.innerHTML = `<p style="color: red;">Lỗi kết nối: ${error.message}</p>`;
+        });
+}
+</script>
+
+<%- include('partials/footer') %>
+

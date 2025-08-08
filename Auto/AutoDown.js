@@ -14,7 +14,7 @@ import {
 
 // ============== LINK ==============//
 const SUPPORTED_LINKS = [
-    /tiktok\.com/, /douyin\.com/, /capcut\.com/, /threads\.com/, /instagram\.com/, /facebook\.com/, /espn\.com/,
+    /tiktok\.com/, /douyin\.com/, /capcut\.com/, /threads\.com/,/threads\.net/, /instagram\.com/, /facebook\.com/, /espn\.com/,
     /pinterest\.com/, /imdb\.com/, /imgur\.com/, /ifunny\.co/, /izlesene\.com/, /reddit\.com/, /youtube\.com/,
     /youtu\.be/, /twitter\.com/, /x\.com/, /vimeo\.com/, /snapchat\.com/, /bilibili\.com/, /dailymotion\.com/,
     /sharechat\.com/, /likee\.video/, /linkedin\.com/, /tumblr\.com/, /hipi\.co\.in/, /telegram\.org/,

@@ -1,0 +1,13 @@
+        </main>
+    </div>
+    
+    <script src="/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <% if (typeof additionalScripts !== 'undefined') { %>
+        <% additionalScripts.forEach(script => { %>
+            <script src="<%= script %>"></script>
+        <% }); %>
+    <% } %>
+</body>
+</html>
+

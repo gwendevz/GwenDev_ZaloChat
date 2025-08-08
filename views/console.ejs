@@ -1,0 +1,154 @@
+<%- include('partials/header', { title: 'Console' }) %>
+
+<div class="page-header fade-in">
+    <h1><i class="fas fa-code"></i> Console</h1>
+    <p>Quản lý và theo dõi Bot Zalo</p>
+</div>
+
+<div class="console-container fade-in">
+    <div class="console-header">
+        <h3><i class="fas fa-terminal"></i> Bot Console</h3>
+        <div class="console-controls">
+            <button class="btn btn-success btn-sm" onclick="runBot()">
+                <i class="fas fa-play"></i> RUN
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="restartBot()">
+                <i class="fas fa-redo"></i> RESTART
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="stopBot()">
+                <i class="fas fa-stop"></i> STOP
+            </button>
+        </div>
+    </div>
+    <div class="console-output" id="console-output">
+        <div style="color: #00ff00;">Bot Console - Sẵn sàng nhận lệnh...</div>
+    </div>
+    <div class="console-input">
+        <input type="text" id="command-input" placeholder="Nhập lệnh (ví dụ: npm install package-name)" onkeypress="handleKeyPress(event)">
+    </div>
+</div>
+
+<script>
+// Socket.IO connection
+let socket;
+
+// Console elements
+const consoleOutput = document.getElementById('console-output');
+const commandInput = document.getElementById('command-input');
+
+// Initialize socket when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initSocket();
+});
+
+function initSocket() {
+    socket = io();
+    
+    // Socket events
+    socket.on('connect', () => {
+        addToConsole('Đã kết nối tới Bot Console', 'success');
+        addToConsole('[SYSTEM] Socket ID: ' + socket.id, 'system');
+    });
+
+    socket.on('disconnect', () => {
+        addToConsole('Mất kết nối tới Bot Console', 'error');
+    });
+
+    socket.on('console-log', (message) => {
+        addToConsole(message, 'log');
+    });
+
+    socket.on('output', (output) => {
+        addToConsole(output, 'output');
+    });
+}
+
+// Functions
+function addToConsole(message, type = 'log') {
+    const timestamp = new Date().toLocaleTimeString('vi-VN');
+    const div = document.createElement('div');
+    
+    let color = '#00ff00';
+    if (type === 'error' || message.includes('[ERROR]')) color = '#ff0000';
+    else if (type === 'warning') color = '#ffff00';
+    else if (type === 'success' || message.includes('[BOT]')) color = '#00ff00';
+    else if (type === 'output') color = '#ffffff';
+    else if (message.includes('[SYSTEM]') || type === 'system') color = '#00bfff';
+    
+    div.innerHTML = `<span style="color: #888;">[${timestamp}]</span> <span style="color: ${color};">${escapeHtml(message)}</span>`;
+    consoleOutput.appendChild(div);
+    
+    // Auto scroll to bottom
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    
+    // Limit console lines
+    const lines = consoleOutput.children;
+    if (lines.length > 1000) {
+        consoleOutput.removeChild(lines[0]);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        const command = commandInput.value.trim();
+        if (command && socket && socket.connected) {
+            executeCommand(command);
+            commandInput.value = '';
+        } else if (!socket || !socket.connected) {
+            addToConsole('[ERROR] Socket chưa kết nối', 'error');
+        }
+    }
+}
+
+function executeCommand(command) {
+    if (socket && socket.connected) {
+        addToConsole(`> ${command}`, 'output');
+        socket.emit('command', { command });
+    } else {
+        addToConsole('[ERROR] Socket chưa kết nối', 'error');
+    }
+}
+
+function runBot() {
+    if (socket && socket.connected) {
+        socket.emit('bot-action', { action: 'run' });
+    } else {
+        addToConsole('[ERROR] Socket chưa kết nối', 'error');
+    }
+}
+
+function restartBot() {
+    if (socket && socket.connected) {
+        socket.emit('bot-action', { action: 'restart' });
+    } else {
+        addToConsole('[ERROR] Socket chưa kết nối', 'error');
+    }
+}
+
+function stopBot() {
+    if (socket && socket.connected) {
+        socket.emit('bot-action', { action: 'stop' });
+    } else {
+        addToConsole('[ERROR] Socket chưa kết nối', 'error');
+    }
+}
+
+// Auto-connect messages
+setTimeout(() => {
+    if (socket && socket.connected) {
+        addToConsole('Console đã sẵn sàng. Nhập lệnh hoặc sử dụng các nút điều khiển.', 'success');
+    } else {
+        addToConsole('[WARNING] Đang thử kết nối...', 'warning');
+        initSocket();
+    }
+}, 2000);
+</script>
+
+<%- include('partials/footer') %>
+

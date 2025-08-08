@@ -45,7 +45,7 @@ async run({ message, api, args }) {
 
   const isSpecialSub = ["list", "mutelist", "unmute"].includes(args[0]?.toLowerCase());
 
-  // === Trường hợp đặc biệt: .mute list | unmute @tag ===
+
   if (isSpecialSub) {
     const sub = args[0]?.toLowerCase();
 
@@ -80,12 +80,9 @@ async run({ message, api, args }) {
       return api.sendMessage(`Đã gỡ mute ${mentions.length} người.`, threadId, type);
     }
   }
-
-  // === Trường hợp mặc định: .mute @tag [thời gian] ===
   if (!mentions.length)
     return api.sendMessage("Tag người bạn muốn mute.", threadId, type);
 
-  // Tìm thời gian nằm sau @tag
   const durationArg = args.find(arg => /^[\d\s]*(s|m|h|d|giây|phút|giờ|ngày)$/i.test(arg));
   let duration = null;
   let expireTime = null;

@@ -1,0 +1,166 @@
+<%- include('partials/header', { title: 'Users' }) %>
+
+<div class="page-header fade-in">
+    <h1><i class="fas fa-user"></i> Users</h1>
+    <p>Quản lý người dùng Bot Zalo</p>
+</div>
+
+<div class="table-container fade-in">
+    <div class="table-header">
+        <h3><i class="fas fa-list"></i> Danh sách Users (<%= users.length %>)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>UID</th>
+                    <th>Tên</th>
+                    <th>VNĐ</th>
+                    <th>Admin</th>
+                    <th>Ban</th>
+                    <th>Tổng nạp</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (users.length === 0) { %>
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #666;">
+                        <i class="fas fa-inbox"></i> Chưa có user nào
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% users.forEach((user, index) => { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><code><%= user.uid %></code></td>
+                        <td><%= user.name || 'Không rõ tên' %></td>
+                        <td><%= new Intl.NumberFormat('vi-VN').format(user.vnd || 0) %> VNĐ</td>
+                        <td>
+                            <% if (user.admin === 2) { %>
+                                <span class="badge badge-danger">Admin</span>
+                            <% } else if (user.admin === 1) { %>
+                                <span class="badge badge-warning">Owner</span>
+                            <% } else { %>
+                                <span class="badge badge-info">User</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (user.ban === 1) { %>
+                                <span class="badge badge-danger">Banned</span>
+                            <% } else { %>
+                                <span class="badge badge-success">Active</span>
+                            <% } %>
+                        </td>
+                        <td><%= new Intl.NumberFormat('vi-VN').format(user.tongnap || 0) %> VNĐ</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editUser('<%= user.uid %>')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Chỉnh sửa User</h3>
+        </div>
+        <form id="editUserForm">
+            <div class="form-group">
+                <label class="form-label">UID</label>
+                <input type="text" id="userUid" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tên</label>
+                <input type="text" id="userName" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">VNĐ</label>
+                <input type="number" id="userVnd" class="form-control" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quyền hạn</label>
+                <select id="userAdmin" class="form-control">
+                    <option value="0">User</option>
+                    <option value="1">Owner</option>
+                    <option value="2">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Trạng thái</label>
+                <select id="userBan" class="form-control">
+                    <option value="0">Active</option>
+                    <option value="1">Banned</option>
+                </select>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-close">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="saveUser()">
+                <i class="fas fa-save"></i> Lưu
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUser = null;
+
+function editUser(uid) {
+  
+    const users = <%- JSON.stringify(users) %>;
+    currentUser = users.find(user => user.uid === uid);
+    
+    if (!currentUser) return;
+    
+    document.getElementById('userUid').value = currentUser.uid;
+    document.getElementById('userName').value = currentUser.name || 'Không rõ tên';
+    document.getElementById('userVnd').value = currentUser.vnd || 0;
+    document.getElementById('userAdmin').value = currentUser.admin || 0;
+    document.getElementById('userBan').value = currentUser.ban || 0;
+    
+    PanelUtils.showModal(document.getElementById('editUserModal'));
+}
+
+function saveUser() {
+    if (!currentUser) return;
+    
+    const formData = {
+        uid: currentUser.uid,
+        vnd: parseInt(document.getElementById('userVnd').value) || 0,
+        admin: parseInt(document.getElementById('userAdmin').value) || 0,
+        ban: parseInt(document.getElementById('userBan').value) || 0
+    };
+    
+    PanelUtils.showLoading();
+    
+    PanelUtils.ajax('/api/users/update', {
+        method: 'POST',
+        data: formData
+    })
+    .then(response => {
+        PanelUtils.hideLoading();
+        if (response.success) {
+            PanelUtils.showNotification('Cập nhật user thành công!', 'success');
+            PanelUtils.hideModal(document.getElementById('editUserModal'));
+          
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            PanelUtils.showNotification('Lỗi: ' + response.message, 'error');
+        }
+    })
+    .catch(error => {
+        PanelUtils.hideLoading();
+        PanelUtils.showNotification('Lỗi kết nối: ' + error.message, 'error');
+    });
+}
+</script>
+
+<%- include('partials/footer') %>
+
