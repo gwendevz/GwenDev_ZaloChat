@@ -7,20 +7,20 @@ export default {
   version: "1.0.0",
   author: "GwenDev",
   group: "system",
-  role: 2, // admin
+  role: 2, 
   cooldown: 10,
   aliases: ["liệt kê file", "danh sách file", "xem thư mục", "files", "danh sách thư mục"],
   noPrefix: true,
 
   async run({ message, api, args }) {
     try {
-      // Nếu người dùng gọi .file [tên]
+     
       if (args.length > 0) {
         const fileName = args[0].toLowerCase();
         const commandPath = path.resolve(`./Core/Commands/${fileName}.js`);
 
         if (!fs.existsSync(commandPath)) {
-          return api.sendMessage(`❌ Không tìm thấy lệnh: ${fileName}`, message.threadId, message.type);
+          return api.sendMessage(` Không tìm thấy lệnh: ${fileName}`, message.threadId, message.type);
         }
 
         return api.sendMessage({
@@ -30,7 +30,6 @@ export default {
         }, message.threadId, message.type);
       }
 
-      // Nếu không có args → liệt kê toàn bộ thư mục hiện tại
       const dirPath = "./";
       const items = fs.readdirSync(dirPath);
       if (!items.length) {
@@ -65,10 +64,9 @@ export default {
 
     } catch (err) {
       console.error("[FILE_COMMAND] Lỗi:", err);
-      return api.sendMessage("❌ Đã xảy ra lỗi khi xử lý yêu cầu.", message.threadId, message.type);
+      return api.sendMessage(" Đã xảy ra lỗi khi xử lý yêu cầu.", message.threadId, message.type);
     }
 
-    // --- Helper ---
     function getFolderSize(folderPath) {
       let size = 0;
       const files = fs.readdirSync(folderPath);
