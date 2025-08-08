@@ -11,7 +11,7 @@ export default {
   description: "Quản lý các cài đặt bot như autodown",
   role: 2,
   cooldown: 10,
-
+group: "admin",
   async run({ message, api, args }) {
     const threadId = message.threadId;
     const type = message.type;

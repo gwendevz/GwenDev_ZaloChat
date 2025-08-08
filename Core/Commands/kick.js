@@ -3,6 +3,7 @@ export default {
   description: "Chỉ người có quyền (role ≥ 2) mới được kick thành viên ra khỏi nhóm.",
   usage: ".kick @tag1 @tag2 ...",
   role: 2,
+    group: "admin",
    aliases: [
     "hãy kick",
     "kick thằng"

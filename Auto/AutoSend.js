@@ -6,7 +6,6 @@ import { ThreadType } from "zca-js";
 import { log } from "../Utils/Logger.js";
 const CONFIG_PATH = path.join("App", "AutoSend.json");
 const ATTACH_DIR = path.join("Data", "AutoSend");
-
 function readAutoSendConfig() {
   try {
     if (!fs.existsSync(CONFIG_PATH)) return [];

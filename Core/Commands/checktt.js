@@ -5,7 +5,7 @@ export default {
   description: "Xem tương tác cá nhân hoặc top tương tác.",
   role: 0,
   cooldown: 10,
-
+group: "group",
   async run({ message, api, args }) {
     try {
       const threadId = message.threadId;

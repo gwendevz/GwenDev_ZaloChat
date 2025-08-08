@@ -227,6 +227,7 @@ export default {
   description: "Hiển thị hệ thống uptime",
   role: 0,
   cooldown: 10,
+  group: "system",
    aliases: [
     "hãy gửi uptime bot",
     "bot uptime",

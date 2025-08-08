@@ -3,6 +3,8 @@ export default {
   description: "Hiển thị thông tin người dùng hoặc người được tag.",
   role: 0,
   cooldown: 10,
+  group: "group",
+  
   aliases: [
     "hãy lấy info người này giúp tôi",
     "hãy lấy info của người này",

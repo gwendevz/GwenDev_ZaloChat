@@ -4,6 +4,7 @@ export default {
   name: "money",
   description: "Xem số dư và chuyển tiền cho người khác",
   cooldown: 5,
+  group: "system",
 role: 0,
   async run({ message, api, args }) {
     const mentions = message.data?.mentions || [];

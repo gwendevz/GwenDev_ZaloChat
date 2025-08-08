@@ -37,7 +37,7 @@ export default {
   description: "Cấm hoặc gỡ cấm người dùng nhắn tin",
   role: 2,
   cooldown: 5,
-
+group: "admin",
 async run({ message, api, args }) {
   const mentions = message.data?.mentions || [];
   const threadId = message.threadId;

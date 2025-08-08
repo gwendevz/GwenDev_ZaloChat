@@ -4,6 +4,7 @@ export default {
   name: "admin",
   description: "Quản lý admin: add, rm, list, ban, unban",
   role: 2,
+  group: "admin",
   cooldown: 10,
   async run({ message, api, args }) {
     const mentions = message.data?.mentions || [];

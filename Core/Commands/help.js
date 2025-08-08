@@ -5,13 +5,72 @@ export default {
   description: "Hiển thị danh sách lệnh hoặc thông tin chi tiết từng lệnh",
   version: "1.1.3",
   author: "GwenDev",
-  group: "system",
+  group: "group",
   role: 0,
   cooldown: 10,
   aliases: ["trợ giúp", "danh sách lệnh", "commands là gì", "list lệnh", "hướng dẫn"],
-  noPrefix: true,
+  noPrefix: false,
 
   async run({ api, message, args, commands }) {
+    const virtualCommands = [
+      {
+        name: "autosend",
+        description: "Tự động gửi tin nhắn định kỳ.",
+        group: "auto",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      },
+      {
+        name: "autodown",
+        description: "Tự động tải nội dung",
+        group: "auto",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      },
+       {
+        name: "antilink",
+        description: "cấm người dùng gửi link",
+        group: "anti",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      },
+         {
+        name: "antispam",
+        description: "cấm người dùng spam",
+        group: "anti",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      },
+         {
+        name: "antiundo",
+        description: "cấm người dùng thu hồi tin nhắn",
+        group: "anti",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      }
+    ];
+
+    for (const cmd of virtualCommands) {
+      if (!commands.has(cmd.name)) {
+        commands.set(cmd.name, cmd);
+      }
+    }
+
     if (args.length > 0) {
       const input = args.join(" ").toLowerCase();
       const command =

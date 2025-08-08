@@ -98,6 +98,7 @@ export default {
   description: "Ghép đôi người dùng với tỷ lệ tình duyên.",
   cooldown: 10,
   role: 0,
+  group: "group",
   aliases: ["ghép đôi", "ghép", "tình duyên", "love", "match"],
   noPrefix: true,
 

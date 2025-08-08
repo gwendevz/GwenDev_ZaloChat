@@ -12,7 +12,6 @@ const __dirname = path.dirname(__filename);
 const commands = new Map();
 const cooldowns = new Map();
 
-// Load tất cả command trong thư mục Core/Commands
 const commandsPath = path.join(__dirname, "../Core/Commands");
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
 
@@ -150,7 +149,6 @@ export async function handleCommands(message, api) {
     userCooldowns.set(uid, now);
   }
 
-  // Thực thi lệnh
   try {
     await command.run({ message, api, args, commands });
   } catch (err) {

@@ -7,6 +7,7 @@ import { Logger, log } from "../../Utils/Logger.js";
 export default {
   name: "naptien",
   aliases: ["nap"],
+  group: "system",
   noPrefix: false, 
   async run({ message, api }) {
     if (message.type !== ThreadType.User) {

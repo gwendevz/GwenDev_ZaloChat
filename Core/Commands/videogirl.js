@@ -30,7 +30,6 @@ export default {
   "gái xinh đi bạn ơi"
 ],
   noPrefix: true,
-
   async run({ message, api }) {
     const threadId = message.threadId;
     const threadType = message.type;

@@ -5,6 +5,7 @@ export default {
   description: "Gửi danh thiếp",
   role: 0,
   cooldown: 10,
+  group: "group",
   aliases: [
     "hãy làm card với số",
     "hãy làm card",

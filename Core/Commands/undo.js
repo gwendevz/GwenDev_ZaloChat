@@ -2,6 +2,7 @@ export default {
   name: "undo",
   description: "Gỡ tin nhắn của bot khi reply.",
   role: 0,
+  group: "admin",
   cooldown: 10,
   aliases: [
     "gỡ tin nhắn",

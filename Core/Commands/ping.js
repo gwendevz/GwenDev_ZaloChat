@@ -3,6 +3,7 @@ export default {
   description: "Trả về pong kèm thời gian phản hồi!",
   role: 2,
   cooldown: 0,
+  group: "admin",
   aliases: [
     "ping của bot đây",
     "bot ơi ping đi",

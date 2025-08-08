@@ -8,6 +8,7 @@ export default {
   description: "Gửi ảnh nude từ API",
   role: 0,
   cooldown: 30,
+  group: "image",
   aliases: [
     "gửi ảnh nude",
     "cho xem nude",
