@@ -24,9 +24,6 @@ export default {
       const senderName = message.data.dName || "Không rõ";
       const subCommand = args[0]?.toLowerCase();
 
-      // ===============================
-      // ✅ Xem tương tác cá nhân hoặc người được tag
-      // ===============================
       if (!subCommand || mentions.length > 0) {
         const targetId = mentions.length > 0 ? mentions[0].uid : senderId;
         const targetName = mentions.length > 0
@@ -66,9 +63,7 @@ export default {
         }, threadId, message.type);
       }
 
-      // ===============================
-      // 📦 Top tương tác trong nhóm (box)
-      // ===============================
+     
       if (subCommand === "box") {
         const rows = await query(`SELECT name, uid, tuongtac FROM users`);
         const boxList = [];
@@ -102,9 +97,7 @@ export default {
         return api.sendMessage({ msg: lines.join("\n"), quoteId: message.msgId }, threadId, message.type);
       }
 
-      // ===============================
-      // 🌐 Top toàn hệ thống (server)
-      // ===============================
+     
       if (subCommand === "server") {
         const rows = await query(`SELECT name, uid, tuongtac FROM users`);
         const globalList = [];
