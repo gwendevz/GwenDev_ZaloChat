@@ -18,7 +18,7 @@ export default {
 
     const start = Date.now();
 
-    // Gửi tin đầu tiên, biến mất sau 3 giây
+   
     await api.sendMessage(
       {
         msg: "Đang đo ping...",
@@ -30,7 +30,7 @@ export default {
 
     const ping = Date.now() - start;
 
-    // Gửi tin kết quả, biến mất sau 30 giây
+    
     await api.sendMessage(
       {
         msg: `🏓 Pong!\n⏱️ Ping: ${ping}ms`,

@@ -4,6 +4,7 @@ import { query } from "../App/Database.js";
 import { handleCommands } from "./HandleCommands.js";
 import { ThreadType } from "zca-js";
 import { askChatGPT } from "../Api/ChatGPT.js";
+import { group } from "../Database/Group.js";
 
 function removeVietnamese(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -70,6 +71,7 @@ export async function handleMessage(message, api) {
   const uid = message.data.uidFrom;
   const name = message.data.dName || "Không tên";
   const threadId = message.threadId;
+
   if (uid) {
     const [userRow] = await query("SELECT mute, mute_expire FROM users WHERE uid = ? LIMIT 1", [uid]);
     if (userRow?.mute) {
@@ -94,14 +96,17 @@ export async function handleMessage(message, api) {
           }
         }
 
-        return; 
+        return;
       }
     }
   }
+
   const groupInfo = await api.getGroupInfo(threadId);
   const groupData = groupInfo?.gridInfoMap?.[String(threadId)] || {};
   const threadName = groupData.name || "Không tên";
-  
+
+  await group(threadId, threadName);
+
   if (uid && name) await user(uid, name, threadId, threadName);
 
   const rawContent = message.body || message.data?.content || "";
@@ -122,16 +127,6 @@ export async function handleMessage(message, api) {
     return api.sendMessage(msg, threadId, ThreadType.Group);
   }
 
-  if (msgBody.includes("gwen là ai")) {
-    const replies = [
-      "Gwen là AI trợ lý đáng tin cậy của nhóm này đó!",
-      "Tớ là Gwen, người bạn AI luôn đồng hành với nhóm mình nè!",
-      "Gọi Gwen là có mặt ngay 😎",
-      "Gwen là trợ lý ảo thân thiện, hay giúp đỡ mọi người trong nhóm nha!"
-    ];
-    return api.sendMessage(randomReply(replies), threadId, ThreadType.Group);
-  }
-
   if (msgBody.match(/hãy tag\s+.+\s+\d+\s+lần\s+giúp tôi/)) {
     const match = msgBody.match(/hãy tag\s+(.+?)\s+(\d+)\s+lần\s+giúp tôi/);
     if (!match) return;
@@ -143,7 +138,7 @@ export async function handleMessage(message, api) {
 
     const [_, keyword, countStr] = match;
     const count = parseInt(countStr);
-    if (count > 100) {
+    if (count > 500) {
       return api.sendMessage("Bạn chỉ có thể tag tối đa 500 lần!", threadId, ThreadType.Group);
     }
 
@@ -182,8 +177,7 @@ export async function handleMessage(message, api) {
 
     return;
   }
-
-  const gwenCalls = [
+   const gwenCalls = [
     "gwen", "gwen ơi", "bé gwen", "em gwen", "chị gwen", "bạn gwen", "cô gwen", "gwen iu",
     "gwen dễ thương", "gwen cute", "gwen đáng yêu", "gwen thân yêu", "gwen yêu dấu", "gwen bé nhỏ",
     "gwen thương", "gwen hiền", "gwen nhẹ nhàng", "gwen ngọt ngào", "gwen của tao", "gwen của tui",

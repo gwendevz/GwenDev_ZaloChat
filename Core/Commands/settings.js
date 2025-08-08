@@ -1,6 +1,6 @@
 import { query } from "../../App/Database.js";
 
-// Lấy tên nhóm từ bảng groups
+
 async function getThreadName(threadId) {
   const result = await query("SELECT name FROM groups WHERE thread_id = ? LIMIT 1", [threadId]);
   return result[0]?.name || `Nhóm ${threadId}`;

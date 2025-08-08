@@ -13,7 +13,7 @@ export default {
     const mentions = message.data.mentions || [];
     const groupId = message.threadId;
 
-    // ⚠️ Không tag ai thì báo
+
     if (mentions.length === 0) {
       return api.sendMessage({
         msg: "Vui lòng tag người bạn muốn kick.",

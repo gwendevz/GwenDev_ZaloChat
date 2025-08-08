@@ -5,6 +5,8 @@ import { settings } from "../App/Settings.js";
 import { ThreadType } from "zca-js";
 import { role } from "../Database/Admin.js";
 import { user } from "../Database/User.js";
+import { query } from "../App/Database.js";
+import { group } from "../Database/Group.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,10 +25,22 @@ for (const file of commandFiles) {
     commands.set(command.name.toLowerCase(), command);
     if (Array.isArray(command.aliases)) {
       for (const alias of command.aliases) {
-        commands.set(alias.toLowerCase(), { ...command, _aliasOnly: true }); // đánh dấu alias
+        commands.set(alias.toLowerCase(), { ...command, _aliasOnly: true });
       }
     }
   }
+}
+
+async function getLuot(threadId) {
+  const [row] = await query(`SELECT luotdung FROM groups WHERE thread_id = ? LIMIT 1`, [threadId]);
+  return row?.luotdung ?? 0;
+}
+
+async function truLuot(threadId) {
+  const luot = await getLuot(threadId);
+  const newVal = Math.max(0, luot - 1);
+  await query(`UPDATE groups SET luotdung = ? WHERE thread_id = ?`, [newVal, threadId]);
+  return newVal;
 }
 
 export async function handleCommands(message, api) {
@@ -64,12 +78,10 @@ export async function handleCommands(message, api) {
   }
 
   if (!command) return;
+  if (!content.startsWith(prefix) && !command._aliasOnly) return;
 
-  if (!content.startsWith(prefix) && !command._aliasOnly) {
-    return; // không phải alias → không cho chạy
-  }
+  await group(threadId, threadName);
 
-  // Kiểm tra ban
   const allowed = await user(uid, userName, threadId, threadName);
   if (!allowed) {
     try {
@@ -84,13 +96,10 @@ export async function handleCommands(message, api) {
           },
         }
       );
-    } catch (err) {
-      console.warn(`[REACTION] Không thể thả ❌ do bị cấm:`, err);
-    }
+    } catch {}
     return;
   }
 
-  // Kiểm tra quyền
   const requiredRole = command.role ?? 0;
   const userDbRole = await role(uid);
   let groupRole = 0;
@@ -112,7 +121,35 @@ export async function handleCommands(message, api) {
     return api.sendMessage("Bạn không đủ quyền để sử dụng lệnh này.", threadId, message.type ?? ThreadType.User);
   }
 
-  // Cooldown
+  const luot = await getLuot(threadId);
+
+  if (luot <= 0 && finalRole < 2 && command.name !== "thuebot") {
+    try {
+      await api.addReaction(
+        { icon: "❌", rType: 0, source: 6 },
+        {
+          type: ThreadType.Group,
+          threadId,
+          data: {
+            msgId: message.data.msgId,
+            cliMsgId: message.data.cliMsgId ?? 0,
+          },
+        }
+      );
+    } catch {}
+    return api.sendMessage(
+      "𝐁𝐨𝐭 𝐇𝐞̂́𝐭 𝐋𝐮̛𝐨̛̣𝐭 𝐃𝐮̀𝐧𝐠 𝐑𝐨̂̀𝐢/n 𝐕𝐮𝐢 𝐋𝐨̀𝐧𝐠 𝐂𝐡𝐚𝐭 .𝐭𝐡𝐮𝐞𝐛𝐨𝐭 𝐍𝐞̂́𝐮 𝐌𝐮𝐨̂́𝐧 𝐓𝐢𝐞̂́𝐩 𝐓𝐮̣𝐜 𝐒𝐮̛̉ 𝐃𝐮̣𝐧𝐠.",
+      threadId,
+      ThreadType.Group
+    );
+  }
+  if (finalRole < 2 && command.name !== "thuebot") {
+    const remaining = await truLuot(threadId);
+    if ([5, 3, 1].includes(remaining)) {
+      await api.sendMessage(` C𝐂𝐚̉𝐧𝐡 𝐁𝐚́𝐨: 𝐁𝐨𝐭 𝐂𝐡𝐢̉ 𝐂𝐨̀𝐧:  ${remaining} 𝐋𝐮̛𝐨̛̣𝐭 𝐃𝐮̀𝐧𝐠/n 𝐕𝐮𝐢 𝐋𝐨̀𝐧𝐠 𝐂𝐡𝐚𝐭 .𝐭𝐡𝐮𝐞𝐛𝐨𝐭 𝐍𝐞̂́𝐮 𝐌𝐮𝐨̂́𝐧 𝐓𝐢𝐞̂́𝐩 𝐓𝐮̣𝐜 𝐒𝐮̛̉ 𝐃𝐮̣𝐧𝐠`, threadId, ThreadType.Group);
+    }
+  }
+
   const cooldownTime = command.cooldown || 0;
   if (cooldownTime > 0 && finalRole < 2) {
     if (!cooldowns.has(command.name)) cooldowns.set(command.name, new Map());

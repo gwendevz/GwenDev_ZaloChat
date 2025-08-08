@@ -15,7 +15,7 @@ export default {
     try {
       const quote = message.data?.quote;
 
-      // Phải reply vào tin nhắn để gỡ
+    
       if (!quote || !quote.msgId) {
         return api.sendMessage({
           msg: "Vui lòng reply vào tin nhắn của bot cần gỡ.",
@@ -23,10 +23,10 @@ export default {
         }, message.threadId, message.type);
       }
 
-      // Gọi API undo tin nhắn
+   
       await api.undo({
         msgId: quote.msgId,
-        cliMsgId: quote.cliMsgId // nếu bạn không có cliMsgId thì có thể bỏ phần này
+        cliMsgId: quote.cliMsgId 
       }, message.threadId, message.type);
 
       return api.sendMessage({
