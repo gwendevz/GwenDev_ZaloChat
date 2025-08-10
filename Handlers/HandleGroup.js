@@ -1,3 +1,4 @@
+// author @GwenDev
 import { GroupEventType } from "zca-js";
 import { group } from "../Database/Group.js";
 

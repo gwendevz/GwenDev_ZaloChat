@@ -1,3 +1,4 @@
+// author @GwenDev
 import cron from "node-cron";
 import { query } from "../App/Database.js";
 import { ThreadType } from "zca-js";

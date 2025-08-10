@@ -1,3 +1,4 @@
+// author @GwenDev
 import { TextStyle } from "zca-js";
 
 export default {
@@ -57,6 +58,16 @@ export default {
         name: "antiundo",
         description: "cấm người dùng thu hồi tin nhắn",
         group: "anti",
+        role: 1,
+        version: "1.0.0",
+        author: "GwenDev",
+        cooldown: 0,
+        aliases: []
+      },
+      {
+        name: "gemini",
+        description: "ai",
+        group: "ai chat",
         role: 1,
         version: "1.0.0",
         author: "GwenDev",

@@ -1,3 +1,4 @@
+// author @GwenDev
 import { ThreadType } from "zca-js";
 
 export default {

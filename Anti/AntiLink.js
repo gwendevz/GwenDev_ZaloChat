@@ -1,3 +1,4 @@
+// author @GwenDev
 import { query } from "../App/Database.js";
 
 const WHITELISTED_DOMAINS = ["gwendev.com"];
@@ -28,7 +29,6 @@ function isWhitelistedLink(href = "") {
      return false;
   }
 }
-// TODO đụ mẹ gwendev
 const URL_REGEX = /(?:https?:\/\/|www\.|ftp\.)\S+|(?<!\w)[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?(?!\w)/gi;
 
 function extractUrls(text) {

@@ -1,11 +1,8 @@
+// author @GwenDev
 import { query } from "../App/Database.js";
 import { log } from "../Utils/Logger.js";
 
-/**
- * Lưu hoặc cập nhật tên nhóm nếu thay đổi
- * @param {string} threadId
- * @param {string} name
- */
+
 export async function group(threadId, name) {
   if (!threadId || !name) return;
 

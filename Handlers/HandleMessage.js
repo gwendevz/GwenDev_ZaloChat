@@ -1,9 +1,11 @@
+// author @GwenDev
 import { user, findUserByNameInThread } from "../Database/User.js";
 import { role } from "../Database/Admin.js";
 import { query } from "../App/Database.js";
 import { handleCommands } from "./HandleCommands.js";
+import { dispatchPendingReply } from "./HandleReply.js";
 import { ThreadType } from "zca-js";
-import { askChatGPT } from "../Api/ChatGPT.js";
+import { askGwenAndReply } from "../Api/ChatGPT.js";
 import { group } from "../Database/Group.js";
 
 function removeVietnamese(str) {
@@ -68,6 +70,18 @@ function randomReply(array) {
 }
 
 export async function handleMessage(message, api) {
+  try {
+    const seen = new WeakSet();
+    const raw = JSON.stringify(message, (k, v) => {
+      if (typeof v === 'object' && v !== null) {
+        if (seen.has(v)) return '[Circular]';
+        seen.add(v);
+      }
+      if (typeof v === 'string' && v.length > 1000) return v.slice(0, 1000) + '...';
+      return v;
+    });
+ 
+  } catch {}
   const uid = message.data.uidFrom;
   const name = message.data.dName || "Không tên";
   const threadId = message.threadId;
@@ -178,7 +192,7 @@ export async function handleMessage(message, api) {
     return;
   }
    const gwenCalls = [
-    "gwen", "gwen ơi", "bé gwen", "em gwen", "chị gwen", "bạn gwen", "cô gwen", "gwen iu",
+    "gwen ơi", "bé gwen", "em gwen", "chị gwen", "bạn gwen", "cô gwen", "gwen iu",
     "gwen dễ thương", "gwen cute", "gwen đáng yêu", "gwen thân yêu", "gwen yêu dấu", "gwen bé nhỏ",
     "gwen thương", "gwen hiền", "gwen nhẹ nhàng", "gwen ngọt ngào", "gwen của tao", "gwen của tui",
     "gwen ngáo", "gwen ngáo đá", "gwen ngu ngơ", "bà gwen", "má gwen", "dì gwen", "mợ gwen", "gwen đú",
@@ -206,13 +220,17 @@ export async function handleMessage(message, api) {
     }
 
     try {
-      const reply = await askChatGPT(question, uid);
-      await api.sendMessage(reply, threadId, ThreadType.Group);
+      await askGwenAndReply({ api, threadId, threadType: ThreadType.Group, prompt: question, uid, dName: name, message });
     } catch {
       await api.sendMessage("Gwen bị lỗi khi trả lời", threadId, ThreadType.Group);
     }
 
     return;
+  }
+
+  const handled = await dispatchPendingReply(message, api);
+  if (handled) {
+   return;
   }
 
   await handleCommands(message, api);

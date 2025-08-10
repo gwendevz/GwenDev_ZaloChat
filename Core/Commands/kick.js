@@ -1,3 +1,4 @@
+// author @GwenDev
 export default {
   name: "kick",
   description: "Chỉ người có quyền (role ≥ 2) mới được kick thành viên ra khỏi nhóm.",
@@ -10,15 +11,19 @@ export default {
   ],
    noPrefix: true,
   async run({ message, api }) {
+    const silent = message.data?.silent === true;
     const mentions = message.data.mentions || [];
     const groupId = message.threadId;
 
 
     if (mentions.length === 0) {
-      return api.sendMessage({
-        msg: "Vui lòng tag người bạn muốn kick.",
-        quoteId: message.msgId
-      }, groupId, message.type);
+      if (!silent) {
+        return api.sendMessage({
+          msg: "Vui lòng tag người bạn muốn kick.",
+          quoteId: message.msgId
+        }, groupId, message.type);
+      }
+      return;
     }
 
     const memberIds = mentions.map(user => user.uid);
@@ -37,17 +42,23 @@ export default {
         msg += `\nKhông thể kick ${failed.length} thành viên:\n${failedList}`;
       }
 
-      return api.sendMessage({
-        msg,
-        quoteId: message.msgId
-      }, groupId, message.type);
+      if (!silent) {
+        return api.sendMessage({
+          msg,
+          quoteId: message.msgId
+        }, groupId, message.type);
+      }
+      return;
 
     } catch (err) {
       console.error("[KICK_COMMAND] Lỗi khi gọi API kick:", err);
-      return api.sendMessage({
-        msg: "Đã xảy ra lỗi khi kick thành viên.",
-        quoteId: message.msgId
-      }, groupId, message.type);
+      if (!silent) {
+        return api.sendMessage({
+          msg: "Đã xảy ra lỗi khi kick thành viên.",
+          quoteId: message.msgId
+        }, groupId, message.type);
+      }
+      return;
     }
   }
 };

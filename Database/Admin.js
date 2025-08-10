@@ -1,10 +1,7 @@
+// author @GwenDev
 import { query } from "../App/Database.js";
 
-/**
- * Lấy vai trò (admin = 1, không phải admin = 0) của người dùng
- * @param {string} uid
- * @returns {Promise<number>}
- */
+
 export async function role(uid) {
   if (!uid) return 0;
 

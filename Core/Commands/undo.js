@@ -1,3 +1,4 @@
+// author @GwenDev
 export default {
   name: "undo",
   description: "Gỡ tin nhắn của bot khi reply.",

@@ -1,3 +1,4 @@
+// author @GwenDev
 export default {
   name: "ping",
   description: "Trả về pong kèm thời gian phản hồi!",

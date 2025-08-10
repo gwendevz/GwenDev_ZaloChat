@@ -1,2 +1,2 @@
-export function handleReaction(reaction) {
-}
+// author @GwenDev
+export function handleReaction() {}

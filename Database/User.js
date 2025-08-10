@@ -1,3 +1,4 @@
+// author @GwenDev
 import { query } from "../App/Database.js";
 import { Logger, log } from "../Utils/Logger.js";
 

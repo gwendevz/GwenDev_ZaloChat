@@ -1,3 +1,4 @@
+// author @GwenDev
 import axios from "axios";
 import path from "path";
 import fs from "fs";
@@ -12,7 +13,6 @@ import {
 } from "../Utils/GwenDev.js";
 
 
-// ============== LINK ==============//
 const SUPPORTED_LINKS = [
     /tiktok\.com/, /douyin\.com/, /capcut\.com/, /threads\.com/,/threads\.net/, /instagram\.com/, /facebook\.com/, /espn\.com/,
     /pinterest\.com/, /imdb\.com/, /imgur\.com/, /ifunny\.co/, /izlesene\.com/, /reddit\.com/, /youtube\.com/,
@@ -23,7 +23,6 @@ const SUPPORTED_LINKS = [
     /miaopai\.com/, /meipai\.com/, /xiaoying\.tv/, /nationalvideo\.com/, /yingke\.com/, /sina\.com\.cn/,
     /vk\.com/, /vk\.ru/, /soundcloud\.com/, /mixcloud\.com/, /spotify\.com/, /zingmp3\.vn/, /bandcamp\.com/
 ];
-// ============== CHECK ON ==============//
 async function isAutoDownEnabled(threadId) {
     const rows = await query("SELECT status, thread FROM settings WHERE cmd = 'autodown' LIMIT 1");
     if (!rows.length) return true;
@@ -33,7 +32,6 @@ async function isAutoDownEnabled(threadId) {
     const entry = list.find(([id]) => id === threadId);
     return entry ? entry[2] === "on" : status === 1;
 }
-// ============== CLEAN FILE ==============//
 function cleanupFiles(files, delay = 8000) {
     setTimeout(() => {
         files.forEach(file => {
@@ -43,7 +41,6 @@ function cleanupFiles(files, delay = 8000) {
         });
     }, delay);
 }
-// ============== START ==============//
 export function startAutoDown(api) {
     api.listener.on("message", async (msg) => {
         const threadId = msg.threadId;
@@ -81,7 +78,6 @@ export function startAutoDown(api) {
             const cacheDir = path.join("Data", "Cache");
             fs.mkdirSync(cacheDir, { recursive: true });
 
-          // ============== TIKTOK ==============//
             if (["tiktok", "douyin"].includes(source) || /(?:vm\.)?tiktok\.com/.test(body)) {
                 const hasVideo = data.medias.some(m => m.type === "video");
                 const isImageOnly = !hasVideo;
@@ -160,7 +156,6 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
-  // ============== DOUYIN ==============//
             if (["douyin"].includes(source) || /(?:v\.)?douyin\.com/.test(body)) {
                 const hasVideo = data.medias.some(m => m.type === "video");
                 const isImageOnly = !hasVideo;
@@ -239,7 +234,6 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
- // ============== FACEBOOK ==============//
             if (["facebook"].includes(source) || /facebook\.com/.test(body)) {
                 const hasVideo = data.medias.some(m => m.type === "video");
                 const isImageOnly = !hasVideo;
@@ -318,7 +312,6 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
- // ============== CAPCUT ==============//
             if (["capcut"].includes(source) || /capcut\.com/.test(body)) {
                 const hasVideo = data.medias.some(m => m.type === "video");
                 const isImageOnly = !hasVideo;
@@ -397,7 +390,6 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
-             // ============== INSTAGRAM & THREADS ==============//
             if (["instagram", "threads"].includes(source) || /instagram\.com|threads\.net|threads\.com/.test(body)) {
                 const platform = /threads/.test(body) ? "𝐓𝐡𝐫𝐞𝐚𝐝𝐬" : "𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦";
                 const hasVideo = data.medias.some(m => m.type === "video");
@@ -457,7 +449,6 @@ export function startAutoDown(api) {
                 }, threadId, threadType);
                 return;
             }
-            // ============== BILIBILI ==============//
             if (source === "bilibili" || /bilibili\.com/.test(body)) {
                 const MAX_SIZE_BYTES = 500 * 1024 * 1024;
                 const candidates = data.medias.filter(m => m.type?.startsWith("video") && m.url);
@@ -512,7 +503,6 @@ export function startAutoDown(api) {
                 }
                 return;
             }
-               // ============== YOUTUBE ==============//
                 if (source === "youtube" || /youtube\.com|youtu\.be/.test(body)) {
                 const MAX_SIZE_BYTES = 500 * 1024 * 1024;
                 const candidates = data.medias.filter(m => m.type?.startsWith("video") && m.url);
@@ -568,7 +558,6 @@ export function startAutoDown(api) {
                 return;
             }
             
-             // ============== XNXX ==============//
             if (source === "xnxx" || /xnxx\.com/.test(body)) {
                 const MAX_SIZE_BYTES = 100 * 1024 * 1024;
                 const candidates = data.medias.filter(m => m.type?.startsWith("video") && m.url);
@@ -623,7 +612,6 @@ export function startAutoDown(api) {
                 }
                 return;
             }
-// ============== XVIDEOS ==============//
 if (source.includes("xvideos") || /xvideos\.com|xvide\.os/.test(body)) {
 
     const MAX_SIZE_BYTES = 100 * 1024 * 1024;
@@ -677,7 +665,6 @@ if (source.includes("xvideos") || /xvideos\.com|xvide\.os/.test(body)) {
     return;
 }
 
-          // ============== SOUNDCLOUD ==============//
 if (source === "soundcloud" || /soundcloud\.com/.test(body)) {
     const audio = data.medias.find(m => m.type === "audio");
     if (!audio?.url) return;
@@ -711,7 +698,6 @@ if (source === "soundcloud" || /soundcloud\.com/.test(body)) {
     }
     return;
 }
-     // ============== MIXCLOUD ==============//
 if (source === "mixcloud" || /mixcloud\.com/.test(body)) {
     const audio = data.medias.find(m => m.type === "audio");
     if (!audio?.url) return;
@@ -744,7 +730,6 @@ if (source === "mixcloud" || /mixcloud\.com/.test(body)) {
     }
     return;
 }
-// ============== SPOTIFY ==============//
 if (source === "spotify" || /spotify\.com/.test(body)) {
     const audio = data.medias.find(m => m.type === "audio");
     if (!audio?.url) return;
@@ -780,7 +765,6 @@ if (source === "spotify" || /spotify\.com/.test(body)) {
     return;
 }
 
-// ============== ZINGMP3 ==============//
 if (source === "zingmp3" || /zingmp3\.vn/.test(body)) {
     const audio = data.medias.find(m => m.type === "audio");
     if (!audio?.url) return;

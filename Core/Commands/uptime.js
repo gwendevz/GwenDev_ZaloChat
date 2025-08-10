@@ -1,3 +1,4 @@
+// author @GwenDev
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
@@ -99,7 +100,6 @@ async function drawSystemCanvas(data) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
 
-  // Background
   const bgGradient = ctx.createLinearGradient(0, 0, width, height);
   bgGradient.addColorStop(0, '#222C3E');
   bgGradient.addColorStop(1, '#181d28');
@@ -110,12 +110,10 @@ ctx.fill();
 
   ctx.fill();
 
-  // Header panel
   ctx.fillStyle = '#232b3e';
   roundedRect(ctx, padding, padding - 28, width - 2 * padding, 70, 18);
   ctx.fill();
 
-  // Traffic lights
   const lights = ['#ff5f57', '#febb2e', '#28c840'];
   lights.forEach((color, i) => {
     ctx.beginPath();
@@ -124,13 +122,11 @@ ctx.fill();
     ctx.fill();
   });
 
-  // Title
   ctx.font = "bold 36px Arial";
   ctx.fillStyle = "#F3F4FA";
   ctx.textAlign = "center";
   ctx.fillText("SYSTEM DASHBOARD", width / 2, padding + 29);
 
-  // Divider line
   ctx.strokeStyle = "#47b7f5";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -138,14 +134,12 @@ ctx.fill();
   ctx.lineTo(width - padding - 50, padding + 63);
   ctx.stroke();
 
-  // Glass overlay
   ctx.globalAlpha = 0.09;
   ctx.fillStyle = "#fff";
   roundedRect(ctx, padding + 6, padding + 74, width - 2 * padding - 12, height - 2 * padding - 56, 24);
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Info grid
   const labelFont = "bold 23px Arial";
   const valueFont = "bold 23px Arial";
   const labelCol = "#59C0FF";
@@ -158,7 +152,6 @@ ctx.fill();
   const leftX = padding + 36;
   const rightX = leftX + colWidth + colGap;
 
-  // Left
   const left = [
     { label: "Thời gian:", value: data.nowTime, color: labelCol },
     { label: "Uptime:", value: data.uptime, color: labelCol2 },
@@ -189,7 +182,6 @@ ctx.fill();
     y += lineH;
   }
 
-  // Right
   const right = [
     { label: "CPU core(s):", value: data.cpuCores, color: labelCol },
     { label: "CPU Used:", value: `${data.cpuUsage}%`, color: labelCol2 },
@@ -212,7 +204,6 @@ ctx.fill();
     y += lineH;
   }
 
-  // Export
   const filePath = path.join(CACHE_DIR, `upt_${Date.now()}.png`);
   const out = fs.createWriteStream(filePath);
   const stream = canvas.createPNGStream();
@@ -221,7 +212,6 @@ ctx.fill();
   return filePath;
 }
 
-// Entry
 export default {
   name: "upt",
   description: "Hiển thị hệ thống uptime",

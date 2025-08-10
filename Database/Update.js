@@ -1,4 +1,4 @@
-// TODO auto update sql
+// author @GwenDev
 import { query } from "../App/Database.js";
 import { log } from "../Utils/Logger.js";
 
@@ -8,7 +8,7 @@ export async function updatesql() {
     const userColumns = await query(`
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('mute', 'mute_expire','tongnap');
+      WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('mute', 'mute_expire','tongnap','caro');
     `);
 
     const userCols = userColumns.map(col => col.COLUMN_NAME);
@@ -26,6 +26,11 @@ export async function updatesql() {
     if (!userCols.includes('tongnap')) {
       await query(`ALTER TABLE users ADD COLUMN tongnap INT DEFAULT 0`);
       log("[DB] add 'tongnap' vào bảng users.", "db");
+    }
+
+    if (!userCols.includes('caro')) {
+      await query(`ALTER TABLE users ADD COLUMN caro INT DEFAULT 0`);
+      log("[DB] add 'caro' vào bảng users.", "db");
     }
 
     

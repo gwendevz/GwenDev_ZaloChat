@@ -1,4 +1,4 @@
-
+// author @GwenDev
 import { Logger, log } from "./Utils/Logger.js";
 import fs from "fs/promises";
 import path from "path";
@@ -100,7 +100,6 @@ async function main() {
                 console.log(`[GET] - Tạm Ngưng 5P Tránh Block 429`);
                 await sleep(300000); 
             }
-            // -------------------------
         }
 
         console.log(`\n[SAVE] File: ${existingData.length} | Save to: ${outputJsonPath}`);
@@ -109,5 +108,4 @@ async function main() {
     }
 }
 
-// Bắt đầu chạy
 main();

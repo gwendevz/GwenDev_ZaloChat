@@ -1,3 +1,4 @@
+// author @GwenDev
 export default {
   name: "info",
   description: "Hiển thị thông tin người dùng hoặc người được tag.",

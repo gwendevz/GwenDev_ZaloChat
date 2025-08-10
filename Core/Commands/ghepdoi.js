@@ -1,4 +1,4 @@
-
+// author @GwenDev
 import fs from "fs";
 import fsp from "fs/promises";
 import axios from "axios";
@@ -58,7 +58,6 @@ async function fillWeddingCertificate(profile1, profile2) {
   ctx.fillText("88888888", 190, 285); // Số Giấy CMND/Hộ chiếu chồng
   ctx.fillText(name1, 190, 350); // Chữ ký của chồng
 
-  // Thông tin người vợ (bên phải)
   ctx.fillText(name2, 470, 190); // Họ và tên vợ
   ctx.fillText("30/11/2000", 470, 210); // Ngày, tháng, năm sinh vợ (mặc định)
   ctx.fillText("Kinh", 400, 230); // Dân tộc vợ

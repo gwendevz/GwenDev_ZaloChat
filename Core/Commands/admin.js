@@ -1,3 +1,4 @@
+// author @GwenDev
 import { query } from "../../App/Database.js";
 
 export default {
