@@ -27,16 +27,16 @@ export default {
       authorId: uid,
       command: "test",
       onReply: async ({ message, api, content }) => {
-        const text = String(content || "").trim().toLowerCase();
+          const text = String(content || "").trim().toLowerCase();
+       
         if (text === "ok") {
-          await api.sendMessage("done", message.threadId, message.type ?? ThreadType.User);
+           await api.sendMessage("done", message.threadId, message.type ?? ThreadType.User);
           return { clear: true };
         }
-        await api.sendMessage("@taglooxi", message.threadId, message.type ?? ThreadType.User);
+        
+         await api.sendMessage("@taglooxi", message.threadId, message.type ?? ThreadType.User);
         return { clear: false };
       }
     });
   }
 };
-
-

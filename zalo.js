@@ -61,7 +61,7 @@ try {
   app.use(bodyParser.json());
   app.use("/", checkPaymentRouter);
   app.use("/", sepayWebhook);
-
+console.log(api.getOwnId());
   app.listen(PORT, () => {
     log(`[PORT] Client Zalo On Port: ${PORT}`, "new");
     log(`[PORT] Website Zalo On Port: 3000`, "new");

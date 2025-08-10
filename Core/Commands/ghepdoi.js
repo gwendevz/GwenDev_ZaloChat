@@ -199,19 +199,45 @@ export default {
         threadId,
         type
       );
+      
+      // Nếu tỉ lệ > 50, thử gửi giấy kết hôn
       if (compatibility > 50) {
         if (fs.existsSync(weddingPath)) {
-          const filledWeddingPath = await fillWeddingCertificate(profile1, profile2);
+          try {
+            const filledWeddingPath = await fillWeddingCertificate(profile1, profile2);
+            await api.sendMessage(
+              {
+                msg: "Đây là giấy kết hôn của hai bạn",
+                attachments: [filledWeddingPath]
+              },
+              threadId,
+              type
+            );
+            await fsp.unlink(filledWeddingPath).catch(() => {});
+          } catch (err) {
+            // Nếu không gửi được giấy kết hôn, gửi câu khác
+            console.log("[GHEPDOI_COMMAND] Không gửi được giấy kết hôn, gửi câu khác:", err?.message || err);
+            await api.sendMessage(
+              `🎉 Chúc mừng! ${name1} và ${name2} có tỉ lệ tình duyên cao (${compatibility}%)! Có thể sẽ có kết quả tốt đẹp trong tương lai! 💕`,
+              threadId,
+              type
+            );
+          }
+        } else {
+          // Nếu không có template giấy kết hôn, gửi câu khác
           await api.sendMessage(
-            {
-              msg: "Đây là giấy kết hôn của hai bạn",
-              attachments: [filledWeddingPath]
-            },
+            `🎉 Chúc mừng! ${name1} và ${name2} có tỉ lệ tình duyên cao (${compatibility}%)! Có thể sẽ có kết quả tốt đẹp trong tương lai! 💕`,
             threadId,
             type
           );
-          await fsp.unlink(filledWeddingPath).catch(() => {});
         }
+      } else {
+        // Nếu tỉ lệ thấp, gửi câu động viên
+        await api.sendMessage(
+          `💔 ${name1} và ${name2} có tỉ lệ tình duyên thấp (${compatibility}%). Nhưng đừng buồn, tình yêu đích thực không phụ thuộc vào con số! Hãy cố gắng và tin tưởng vào tình cảm của mình! 💪❤️`,
+          threadId,
+          type
+        );
       }
 
       await fsp.unlink(avatar1Path).catch(() => {});

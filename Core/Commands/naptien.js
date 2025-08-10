@@ -38,8 +38,8 @@ if (amount < 10000 || amount > 1000000) {
     const result = await query("INSERT INTO tb_orders (total, uid) VALUES (?, ?)", [amount, uid]);
     const orderId = result.insertId;
  log(`[SEPAY] New Order to UID: DH${orderId}, | Money: ${amount}`,"url");
-
-    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=888310106&template=compact&amount=${amount}&des=DH${orderId}`;
+// ccasu hình webhook ở https://my.sepay.vn/webhook | ddaaasy làm tiêp đi dcm fix cho t
+    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=888310106&template=compact&amount=${amount}&des=DH${orderId}`;  // check stk nhận tiền
     const qrImage = await fetch(qrUrl);
     const buffer = await qrImage.arrayBuffer();
 

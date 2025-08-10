@@ -5,7 +5,7 @@ import { getApiInstance } from "../App/BotInstance.js";
 import { TextStyle, Urgency } from "zca-js";
 import { Logger, log } from "../Utils/Logger.js";
 const router = express.Router();
-
+// https://domain/sepay_webhook [ này là webhoook nhận gd]
 router.post("/sepay_webhook", async (req, res) => {
   try {
     const data = req.body;
