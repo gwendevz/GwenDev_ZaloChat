@@ -9,7 +9,7 @@ async function getThreadName(threadId) {
 
 export default {
   name: "settings",
-  description: "Quản lý các cài đặt bot như autodown",
+  description: "Quản lý các cài đặt bot",
   role: 2,
   cooldown: 10,
 group: "admin",

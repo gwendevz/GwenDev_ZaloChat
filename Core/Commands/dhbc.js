@@ -261,11 +261,18 @@ export default {
   aliases: [],
   noPrefix: false,
   async run({ message, api, args }) {
-    const threadId = message.threadId;
-    const threadType = message.type ?? ThreadType.User;
-    const uid = message.data?.uidFrom;
-    const userName = message.data?.senderName || "Người dùng";
+    const threadId = message.threadId,
+      threadType = message.type ?? ThreadType.User,
+      uid = message.data?.uidFrom;
+    
+    // Kiểm tra user có tồn tại trong database không
+    const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
+    if (!userExists) {
+      return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);
+    }
+    
+    const sub = (args[0] || "").toLowerCase();
 
-    await startGame({ api, threadId, threadType, uid, userName, messageId: message.messageId });
+    await startGame({ api, threadId, threadType, uid, userName: message.data?.senderName || "Người dùng", messageId: message.messageId });
   },
 };

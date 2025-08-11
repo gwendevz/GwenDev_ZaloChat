@@ -13,6 +13,11 @@ export default {
     const type = message.type;
     const senderUid = message.data?.uidFrom;
 
+    const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [senderUid]);
+    if (!userExists) {
+      return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, type);
+    }
+
     const sub = args[0]?.toLowerCase();
 
     if (sub === "pay") {
@@ -57,10 +62,15 @@ export default {
 
     if (mentions.length > 0) {
       const targetUser = mentions[0];
-      const [user] = await query("SELECT vnd, coins FROM users WHERE uid = ?", [targetUser.uid]);
+      
 
-      const vndBalance = user?.vnd || 0;
-      const coinsBalance = user?.coins || 0;
+      const [user] = await query("SELECT vnd, coins FROM users WHERE uid = ?", [targetUser.uid]);
+      if (!user) {
+        return api.sendMessage("Người dùng này chưa có tài khoản trong hệ thống.", threadId, type);
+      }
+
+      const vndBalance = user.vnd || 0;
+      const coinsBalance = user.coins || 0;
       
       return api.sendMessage(
         `User: ${targetUser.dName || "người dùng"}:\n💵 VND: ${vndBalance.toLocaleString()}đ\n💎 Coins Bot: ${coinsBalance.toLocaleString()}$`,

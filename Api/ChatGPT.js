@@ -2,7 +2,6 @@
 import fetch from "node-fetch";
 import { dangKyReply } from "../Handlers/HandleReply.js";
 import sclCommand from "../Core/Commands/scl.js";
-// new imports for video intents
 import cosplayCommand from "../Core/Commands/cosplay.js";
 import videoGirlCommand from "../Core/Commands/videogirl.js";
 import kickCommand from "../Core/Commands/kick.js";
@@ -68,7 +67,7 @@ async function chatGemini(messages, systemPrompt) {
     systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 900
+      maxOutputTokens: 90000
     }
   };
   const res = await fetch(url, {

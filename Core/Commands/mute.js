@@ -43,6 +43,12 @@ async run({ message, api, args }) {
   const mentions = message.data?.mentions || [];
   const threadId = message.threadId;
   const type = message.type;
+  const uid = message.data?.uidFrom;
+
+  const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
+  if (!userExists) {
+    return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, type);
+  }
 
   const isSpecialSub = ["list", "mutelist", "unmute"].includes(args[0]?.toLowerCase());
 
@@ -96,15 +102,27 @@ async run({ message, api, args }) {
     expireTime = Date.now() + duration;
   }
 
-  for (const user of mentions) {
+  let successCount = 0;
+  for (const user of mentions) { // Kiểm tra user có tồn tại không
+    const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
+    if (!existingUser) {
+      await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
+      continue;
+    }
+    
     await query(
       "UPDATE users SET mute = 1, mute_expire = ? WHERE uid = ?",
       [expireTime, user.uid]
     );
+    successCount++;
   }
 
-  const timeMsg = duration ? `(trong ${durationArg})` : "(vĩnh viễn)";
-  return api.sendMessage(`Đã mute ${mentions.length} người ${timeMsg}.`, threadId, type);
+  if (successCount > 0) {
+    const timeMsg = duration ? `(trong ${durationArg})` : "(vĩnh viễn)";
+    return api.sendMessage(`Đã mute ${successCount} người ${timeMsg}.`, threadId, type);
+  } else {
+    return api.sendMessage("Không có ai được mute.", threadId, type);
+  }
 }
 
 };

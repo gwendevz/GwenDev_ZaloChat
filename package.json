@@ -15,6 +15,7 @@
     "canvas": "^3.1.2",
     "chalk": "^5.5.0",
     "cheerio": "^1.1.2",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "ffmpeg-static": "^5.2.0",
     "ffprobe-static": "^3.1.0",

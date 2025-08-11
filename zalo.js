@@ -54,7 +54,6 @@ try {
   log("[SEPAY] - Settings Banking.", "auto");
   log("[API] - Settings Api.", "auto");
   log("[LOGIN] - Settings Login.", "auto");
- 
   const app = express();
   const PORT = process.env.PORT || 80;
 

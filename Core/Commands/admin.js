@@ -12,6 +12,13 @@ export default {
     const sub = args[0]?.toLowerCase();
     const threadId = message.threadId;
     const type = message.type;
+    const uid = message.data?.uidFrom;
+
+  
+    const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
+    if (!userExists) {
+      return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, type);
+    }
 
     switch (sub) {
       case "add": {
@@ -19,7 +26,9 @@ export default {
           return api.sendMessage("Vui lòng tag người bạn muốn thêm làm admin.", threadId, type);
         }
 
+        let successCount = 0;
         for (const user of mentions) {
+       
           const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
           if (!existingUser) {
             await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
@@ -30,9 +39,14 @@ export default {
             "UPDATE users SET admin = 2 WHERE uid = ?",
             [user.uid]
           );
+          successCount++;
         }
 
-        return api.sendMessage(`Đã thêm ${mentions.length} người làm admin`, threadId, type);
+        if (successCount > 0) {
+          return api.sendMessage(`Đã thêm ${successCount} người làm admin`, threadId, type);
+        } else {
+          return api.sendMessage("Không có ai được thêm làm admin.", threadId, type);
+        }
       }
 
       case "rm": {
@@ -40,11 +54,24 @@ export default {
           return api.sendMessage("Vui lòng tag người bạn muốn gỡ quyền admin.", threadId, type);
         }
 
+        let successCount = 0;
         for (const user of mentions) {
+        
+          const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
+          if (!existingUser) {
+            await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
+            continue;
+          }
+          
           await query("UPDATE users SET admin = 0 WHERE uid = ?", [user.uid]);
+          successCount++;
         }
 
-        return api.sendMessage(`Đã gỡ quyền admin của ${mentions.length} người.`, threadId, type);
+        if (successCount > 0) {
+          return api.sendMessage(`Đã gỡ quyền admin của ${successCount} người.`, threadId, type);
+        } else {
+          return api.sendMessage("Không có ai bị gỡ quyền admin.", threadId, type);
+        }
       }
 
       case "list": {
@@ -57,7 +84,7 @@ export default {
         const lines = [
           "╭─────「 DANH SÁCH ADMIN 」─────⭓",
           ...result.map((user, index) =>
-            `│ ${index + 1}. ${user.name || "Không rõ"} - ${user.uid} (cấp ${user.admin})`),
+            `│ ${index + 1}. ${user.name || "Không rõ"} - ${user.uid}`),
           "╰──────────────────────────────⭓"
         ];
 
@@ -69,11 +96,24 @@ export default {
           return api.sendMessage("Vui lòng tag người bạn muốn cấm sử dụng bot.", threadId, type);
         }
 
+        let successCount = 0;
         for (const user of mentions) {
+       
+          const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
+          if (!existingUser) {
+            await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
+            continue;
+          }
+          
           await query("UPDATE users SET ban = 1 WHERE uid = ?", [user.uid]);
+          successCount++;
         }
 
-        return api.sendMessage(`Đã cấm ${mentions.length} người sử dụng bot.`, threadId, type);
+        if (successCount > 0) {
+          return api.sendMessage(`Đã cấm ${successCount} người sử dụng bot.`, threadId, type);
+        } else {
+          return api.sendMessage("Không có ai bị cấm.", threadId, type);
+        }
       }
 
       case "unban": {
@@ -81,11 +121,24 @@ export default {
           return api.sendMessage("Vui lòng tag người bạn muốn gỡ cấm.", threadId, type);
         }
 
+        let successCount = 0;
         for (const user of mentions) {
+          
+          const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
+          if (!existingUser) {
+            await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
+            continue;
+          }
+          
           await query("UPDATE users SET ban = 0 WHERE uid = ?", [user.uid]);
+          successCount++;
         }
 
-        return api.sendMessage(`Đã gỡ cấm ${mentions.length} người.`, threadId, type);
+        if (successCount > 0) {
+          return api.sendMessage(`Đã gỡ cấm ${successCount} người.`, threadId, type);
+        } else {
+          return api.sendMessage("Không có ai được gỡ cấm.", threadId, type);
+        }
       }
 
       default:

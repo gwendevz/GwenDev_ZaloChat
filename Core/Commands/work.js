@@ -109,6 +109,12 @@ export default {
         const threadType = message.type;
         const uid = message.data?.uidFrom;
 
+        // Kiểm tra user có tồn tại trong database không
+        const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
+        if (!userExists) {
+            return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);
+        }
+
         const workList = works.map((work, index) => `${index + 1}. ${work.name}`).join('\n');
 
         const workMessage = `🧾 𝐃𝐚𝐧𝐡 𝐒𝐚́𝐜𝐡 𝐂𝐨̂𝐧𝐠 𝐕𝐢𝐞̣̂𝐜.\n${workList}\n⋆─────────────⋆\n• Reply+ STT Để Chọn Công Việc\n• Thời Gian Hồi Sức Là 2 Giờ\n• Có Tỉ Lệ Gặp Tai Nạn Khi Làm Việc`;
