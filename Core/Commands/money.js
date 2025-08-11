@@ -6,7 +6,7 @@ export default {
   description: "Xem số dư và chuyển tiền cho người khác",
   cooldown: 5,
   group: "system",
-role: 0,
+  role: 0,
   async run({ message, api, args }) {
     const mentions = message.data?.mentions || [];
     const threadId = message.threadId;
@@ -16,29 +16,40 @@ role: 0,
     const sub = args[0]?.toLowerCase();
 
     if (sub === "pay") {
-      if (mentions.length === 0 || args.length < 3) {
+   
+      if (mentions.length === 0 || args.length < 2) {
         return api.sendMessage("Cú pháp: .money pay @tag <số tiền>", threadId, type);
       }
 
       const targetUser = mentions[0];
-      const amount = parseInt(args[2]);
-
+     
+      const amount = parseInt(args[args.length - 1]);
+      
+  
+      const fullName = args.slice(1, -1).join(' ').replace(/^@/, '');
+     
       if (isNaN(amount) || amount <= 0) {
         return api.sendMessage("Số tiền không hợp lệ.", threadId, type);
       }
-      const [sender] = await query("SELECT vnd FROM users WHERE uid = ?", [senderUid]);
-      if (!sender || sender.vnd < amount) {
-        return api.sendMessage("Bạn không đủ số dư để chuyển.", threadId, type);
+      
+      const [receiver] = await query("SELECT uid, name FROM users WHERE uid = ?", [targetUser.uid]);
+      if (!receiver) {
+        return api.sendMessage("Người nhận chưa có tài khoản trong hệ thống. Không thể chuyển tiền.", threadId, type);
+      }
+     const [sender] = await query("SELECT coins FROM users WHERE uid = ?", [senderUid]);
+      
+      if (!sender || sender.coins < amount) {
+        return api.sendMessage("Bạn không đủ coins để chuyển.", threadId, type);
       }
 
-      await query("UPDATE users SET vnd = vnd - ? WHERE uid = ?", [amount, senderUid]);
+      await query("UPDATE users SET coins = coins - ? WHERE uid = ?", [amount, senderUid]);
+     
       await query(
-        "INSERT INTO users (uid, name, vnd) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vnd = vnd + ?",
-        [targetUser.uid, targetUser.dName || "Không rõ", amount, amount]
+        "UPDATE users SET coins = coins + ? WHERE uid = ?",
+        [amount, targetUser.uid]
       );
-
-      return api.sendMessage(
-        ` Bạn đã chuyển ${amount.toLocaleString()}đ cho ${targetUser.dName || "người nhận"}.`,
+    return api.sendMessage(
+        `💸 Chuyển Thành Công: ${amount.toLocaleString()} Coins\n Gửi Tới: ${receiver.name}.`,
         threadId,
         type
       );
@@ -46,21 +57,24 @@ role: 0,
 
     if (mentions.length > 0) {
       const targetUser = mentions[0];
-      const [user] = await query("SELECT vnd FROM users WHERE uid = ?", [targetUser.uid]);
+      const [user] = await query("SELECT vnd, coins FROM users WHERE uid = ?", [targetUser.uid]);
 
-      const balance = user?.vnd || 0;
+      const vndBalance = user?.vnd || 0;
+      const coinsBalance = user?.coins || 0;
+      
       return api.sendMessage(
-        `💰 Số dư của ${targetUser.dName || "người dùng"}: ${balance.toLocaleString()}đ`,
+        `User: ${targetUser.dName || "người dùng"}:\n💵 VND: ${vndBalance.toLocaleString()}đ\n💎 Coins Bot: ${coinsBalance.toLocaleString()}$`,
         threadId,
         type
       );
     }
 
-    const [self] = await query("SELECT vnd FROM users WHERE uid = ?", [senderUid]);
-    const balance = self?.vnd || 0;
+    const [self] = await query("SELECT vnd, coins FROM users WHERE uid = ?", [senderUid]);
+    const vndBalance = self?.vnd || 0;
+    const coinsBalance = self?.coins || 0;
 
     return api.sendMessage(
-      `💰 Số dư của bạn: ${balance.toLocaleString()}đ`,
+      `💵 VND: ${vndBalance.toLocaleString()}đ\n💎 Coins Bot: ${coinsBalance.toLocaleString()}$`,
       threadId,
       type
     );

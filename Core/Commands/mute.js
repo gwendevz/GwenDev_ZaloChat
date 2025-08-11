@@ -98,8 +98,8 @@ async run({ message, api, args }) {
 
   for (const user of mentions) {
     await query(
-      "INSERT INTO users (uid, name, mute, mute_expire) VALUES (?, ?, 1, ?) ON DUPLICATE KEY UPDATE mute = 1, mute_expire = ?",
-      [user.uid, user.dName || "Không rõ", expireTime, expireTime]
+      "UPDATE users SET mute = 1, mute_expire = ? WHERE uid = ?",
+      [expireTime, user.uid]
     );
   }
 

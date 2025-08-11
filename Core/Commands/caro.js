@@ -299,8 +299,8 @@ async function handleMove(game, message, content, api) {
       );
       try {
         await query(
-          "INSERT INTO users (uid,name,caro) VALUES (?,?,1) ON DUPLICATE KEY UPDATE caro=caro+1,name=VALUES(name)",
-          [uid, game.players.find((p) => p.uid === uid).name],
+          "UPDATE users SET caro = caro + 1 WHERE uid = ?",
+          [uid]
         );
       } catch {}
     } else {
@@ -456,8 +456,8 @@ export default {
         if (winner) {
           try {
             await query(
-              "INSERT INTO users (uid,name,caro) VALUES (?,?,1) ON DUPLICATE KEY UPDATE caro=caro+1,name=VALUES(name)",
-              [winner.uid, winner.name],
+              "UPDATE users SET caro = caro + 1 WHERE uid = ?",
+              [winner.uid]
             );
           } catch {}
           await api.sendMessage(

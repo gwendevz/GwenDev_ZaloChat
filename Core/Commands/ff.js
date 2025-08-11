@@ -8,7 +8,7 @@ export default {
   description: "Xem thông tin tài khoản Free Fire",
   role: 0,
   cooldown: 5,
-  group: "game",
+  group: "group",
   aliases: [
     "freefire", "thông tin freefire", "ff info", "xem ff", "uid ff"
   ],

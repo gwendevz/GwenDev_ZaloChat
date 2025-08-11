@@ -57,10 +57,12 @@ function extractIds(res) {
 }
 
 async function ensureUserRow(uid, name) {
-  await query(
-    `INSERT INTO users (uid, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-    [uid, name || "Không rõ"],
-  );
+  const [user] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
+  if (user) {
+  
+    await query("UPDATE users SET name = ? WHERE uid = ?", [name || "Không rõ", uid]);
+  }
+ 
 }
 
 async function addCoins(uid, name, amount) {

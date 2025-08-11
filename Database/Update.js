@@ -8,7 +8,7 @@ export async function updatesql() {
     const userColumns = await query(`
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('mute', 'mute_expire','tongnap','caro','coins');
+      WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('mute', 'mute_expire','tongnap','caro','coins','work_cooldown');
     `);
 
     const userCols = userColumns.map(col => col.COLUMN_NAME);
@@ -36,6 +36,11 @@ export async function updatesql() {
     if (!userCols.includes('coins')) {
       await query(`ALTER TABLE users ADD COLUMN coins BIGINT DEFAULT 0`);
       log("[DB] add 'coins' vào bảng users.", "db");
+    }
+
+    if (!userCols.includes('work_cooldown')) {
+      await query(`ALTER TABLE users ADD COLUMN work_cooldown BIGINT DEFAULT NULL`);
+      log("[DB] add 'work_cooldown' vào bảng users.", "db");
     }
 
     

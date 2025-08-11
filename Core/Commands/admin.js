@@ -20,9 +20,15 @@ export default {
         }
 
         for (const user of mentions) {
+          const [existingUser] = await query("SELECT uid FROM users WHERE uid = ?", [user.uid]);
+          if (!existingUser) {
+            await api.sendMessage(`Người dùng ${user.dName || user.uid} chưa có tài khoản trong hệ thống.`, threadId, type);
+            continue;
+          }
+          
           await query(
-            "INSERT INTO users (uid, name, admin) VALUES (?, ?, 2) ON DUPLICATE KEY UPDATE admin = 2",
-            [user.uid, user.dName || "Không rõ"]
+            "UPDATE users SET admin = 2 WHERE uid = ?",
+            [user.uid]
           );
         }
 
