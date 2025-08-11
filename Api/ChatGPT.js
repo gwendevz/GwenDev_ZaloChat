@@ -88,19 +88,17 @@ function isMusicIntent(text) {
   return /\b(nhac|am nhac|bai hat|baihat|phat nhac|mo nhac|bat nhac|soundcloud|audio|playlist|album|mv|beat|karaoke|track|song|music)\b/i.test(t);
 }
 
-// intent detection for video cosplay
+
 function isCosplayIntent(text) {
   const t = normalizeVN(text);
   return /\b(cosplay)\b/i.test(t) && /\b(video|clip|xem|coi|cho|gui|bat|mo|phat|chieu)\b/i.test(t);
 }
 
-// intent detection for video girl/hot girl
 function isVideoGirlIntent(text) {
   const t = normalizeVN(text);
   return /(gai xinh|gaixinh|gai xin|video gai|video gai xinh)/i.test(t);
 }
 
-// intent detection for kick
 function isKickIntent(text) {
   const t = normalizeVN(text);
   return /\b(kick|duoi|đuổi|đa)|\bkich\b/i.test(t);
