@@ -1,5 +1,6 @@
-// author @GwenDev
+// author @GwenDev 
 import fetch from "node-fetch";
+import { settings } from "../App/Settings.js";
 import { dangKyReply } from "../Handlers/HandleReply.js";
 import sclCommand from "../Core/Commands/scl.js";
 import cosplayCommand from "../Core/Commands/cosplay.js";
@@ -8,9 +9,6 @@ import kickCommand from "../Core/Commands/kick.js";
 import infoCommand from "../Core/Commands/info.js";
 import { handleCommands as runCommandHandler } from "../Handlers/HandleCommands.js";
 import { role as getUserRole } from "../Database/Admin.js";
-
-const GEMINI_API_KEY = "AIzaSyBZibdNcOWey_PXsRIIHG34DuX5J81uPlc";
-const GEMINI_MODEL = "gemini-2.5-flash";
 
 const SYSTEM_PROMPT = `Bạn là Gwen — một nhân vật bước ra từ Liên Minh Huyền Thoại, búp bê cắt may tinh tế và ấm áp.
 Phong cách: nói chuyện tự nhiên 100% tiếng Việt, duyên dáng, gọn gàng, không nhắc AI/mô hình/công cụ.
@@ -61,7 +59,10 @@ function toGeminiContents(messages) {
 }
 
 async function chatGemini(messages, systemPrompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const apiKey = settings.geminiApiKey;
+  const model = settings.geminiModel || "gemini-2.5-flash";
+  if (!apiKey) throw new Error("Missing settings.geminiApiKey (set in App/Settings.js or env GEMINI_API_KEY)");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = {
     contents: toGeminiContents(messages),
     systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
@@ -86,7 +87,6 @@ function isMusicIntent(text) {
   const t = normalizeVN(text);
   return /\b(nhac|am nhac|bai hat|baihat|phat nhac|mo nhac|bat nhac|soundcloud|audio|playlist|album|mv|beat|karaoke|track|song|music)\b/i.test(t);
 }
-
 
 function isCosplayIntent(text) {
   const t = normalizeVN(text);
@@ -113,6 +113,15 @@ function isHelpIntent(text) {
   return /(\bhelp\b|tro giup|trợ giúp|danh sách lệnh|list lenh|lenh bot|lệnh bot|command|commands)/i.test(t);
 }
 
+function isConnectGroupIntent(text) {
+  const t = normalizeVN(text);
+  return /(ket noi nhom|ketnoinhom|kết nối nhóm)/i.test(t);
+}
+
+function isSayIntent(text) {
+  return false;
+}
+
 async function hasKickPermission(api, uid, threadId) {
   let userDbRole = 0;
   try {
@@ -129,6 +138,15 @@ async function hasKickPermission(api, uid, threadId) {
     } catch {}
   }
   return Math.max(userDbRole, groupRole) >= 2;
+}
+
+async function hasConnectPermission(api, uid) {
+  try {
+    const role = await getUserRole(uid);
+    return role >= 2;
+  } catch {
+    return false;
+  }
 }
 
 function stripLeadingStopwords(original, normalized) {
@@ -155,11 +173,30 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
   const kickIntent = isKickIntent(prompt);
   const infoIntent = isInfoIntent(prompt);
   const helpIntent = isHelpIntent(prompt);
+  const connectGroupIntent = isConnectGroupIntent(prompt);
+  const ttsIntent = isSayIntent(prompt);
+
+  let permittedKick = true;
+  let permittedConnect = true;
+  if (kickIntent && message?.data?.mentions?.length) {
+    permittedKick = await hasKickPermission(api, uid, threadId);
+  }
+  if (connectGroupIntent) {
+    permittedConnect = await hasConnectPermission(api, uid);
+  }
+  if ((kickIntent && !permittedKick) || (connectGroupIntent && !permittedConnect)) {
+    let noPermText = "Gwen nghĩ là bạn không đủ quyền để thực hiện yêu cầu này.";
+    if (!permittedKick && kickIntent) noPermText = "Gwen nghĩ là bạn không đủ quyền để kick thành viên.";
+    if (!permittedConnect && connectGroupIntent) noPermText = "Gwen nghĩ là bạn không đủ quyền để kết nối nhóm.";
+    await api.sendMessage(noPermText, threadId, threadType);
+    return { clear: false };
+  }
   try {
     const uname = await getDisplayName(api, uid);
-    } catch {}
+    void uname;
+  } catch {}
   const messages = buildMessages(state.history, prompt);
-  let reply = await chatGemini(messages, SYSTEM_PROMPT);
+  const reply = await chatGemini(messages, SYSTEM_PROMPT);
   const sent = await api.sendMessage(reply, threadId, threadType);
   const msgId = sent?.message?.msgId ?? sent?.msgId ?? null;
   const cliMsgId = sent?.message?.cliMsgId ?? sent?.cliMsgId ?? null;
@@ -186,14 +223,12 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
     try {
       const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
       await cosplayCommand.run({ message: fakeMessage, api });
-    } catch (e) {
-    }
+    } catch (e) {}
   } else if (videoGirl) {
     try {
       const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
       await videoGirlCommand.run({ message: fakeMessage, api });
-    } catch (e) {
-    }
+    } catch (e) {}
   } else if (kickIntent && message?.data?.mentions?.length) {
     try {
       const permitted = await hasKickPermission(api, uid, threadId);
@@ -213,6 +248,35 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
       const fakeMsg = { ...message, data: { ...message.data, content: ".help" } };
       await runCommandHandler(fakeMsg, api);
     } catch (e) {}
+  } else if (connectGroupIntent) {
+    try {
+      const permitted = await hasConnectPermission(api, uid);
+      if (!permitted) {
+        await api.sendMessage("Bạn không đủ quyền để kết nối nhóm.", threadId, threadType);
+      } else {
+        const fakeMsg = { ...message, data: { ...message.data, content: ".ketnoinhom" } };
+        await runCommandHandler(fakeMsg, api);
+      }
+    } catch (e) {}
+  } else if (ttsIntent) {
+    try {
+      const kwRegex = /(say|đọc|doc|tts|voice|ghi\s?âm|ghi\s?am|ghiam)/i;
+      const parts = prompt.split(kwRegex);
+      let after = "";
+      if (parts.length >= 3) {
+        after = parts[2].trim();
+      } else {
+        const words = prompt.trim().split(/\s+/);
+        after = words.slice(1).join(" ");
+      }
+      if (!after) {
+        await api.sendMessage("Gwen cần nội dung để đọc.", threadId, threadType);
+      } else {
+        const fakeContent = `.say ${after}`;
+        const fakeMsg = { ...message, data: { ...message.data, content: fakeContent } };
+        await runCommandHandler(fakeMsg, api);
+      }
+    } catch (e) {}
   } else if (music) {
     try {
       const text = String(prompt || "").trim();
@@ -227,9 +291,10 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
       const args = query.split(/\s+/g);
       const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid, content: query, autoPlayFirst: true } };
       await sclCommand.run({ message: fakeMessage, api, args });
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   return { clear: false };
 }
+
+

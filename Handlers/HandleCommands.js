@@ -8,6 +8,7 @@ import { role } from "../Database/Admin.js";
 import { user } from "../Database/User.js";
 import { query } from "../App/Database.js";
 import { group } from "../Database/Group.js";
+import { Reactions } from "zca-js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -162,25 +163,32 @@ export async function handleCommands(message, api) {
 
     if (remaining > 0) {
       const secondsLeft = Math.ceil(remaining / 1000);
+      const dest = {
+        type: threadId.length > 10 ? ThreadType.Group : ThreadType.User,
+        threadId,
+        data: {
+          msgId: message.data.msgId,
+          cliMsgId: message.data.cliMsgId ?? 0,
+        },
+      };
       for (let i = secondsLeft; i > 0; i--) {
         setTimeout(async () => {
           try {
-            await api.addReaction(
-              { icon: "⏰", rType: 0, source: 6 },
-              {
-                type: threadId.length > 10 ? ThreadType.Group : ThreadType.User,
-                threadId,
-                data: {
-                  msgId: message.data.msgId,
-                  cliMsgId: message.data.cliMsgId ?? 0,
-                },
-              }
-            );
+            await api.addReaction(Reactions.NONE, dest);
+
+            for (let n = 0; n < i; n++) {
+              await api.addReaction({ icon: "⏰", rType: 0, source: 6 }, dest);
+            }
           } catch (err) {
             console.warn(`[REACTION] Thả ⏰ (${i}) thất bại:`, err);
           }
         }, (secondsLeft - i) * 1000);
       }
+      setTimeout(async () => {
+        try {
+          await api.addReaction(Reactions.NONE, dest);
+        } catch {}
+      }, secondsLeft * 1000);
       return;
     }
 

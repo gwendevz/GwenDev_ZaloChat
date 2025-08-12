@@ -1,10 +1,10 @@
 // author @GwenDev
 import axios from "axios";
 import { load as loadHTML } from "cheerio";
-import { ThreadType } from "zca-js";
+import { ThreadType, Reactions } from "zca-js";
 import path from "path";
 import fs from "fs";
-import { downloadFile, convertToAac } from "../../Utils/GwenDev.js";
+import { downloadFile, convertToAac, createSoundCloudCanvas, createSoundCloudResultsCanvas } from "../../Utils/GwenDev.js";
 
 const pendingSearchByThread = new Map();
 
@@ -118,38 +118,30 @@ const exportDefault = {
     if (content.startsWith("audio")) {
       const num = parseInt(args?.[0] || "", 10);
       if (!num || Number.isNaN(num)) {
-        return api.sendMessage("[💌]→ Vui lòng nhập: audio <số thứ tự>", threadId, threadType);
+        return api.sendMessage("Vui lòng nhập: audio <số thứ tự>", threadId, threadType);
       }
 
       const pending = pendingSearchByThread.get(threadId);
       if (!pending || !Array.isArray(pending.items) || pending.items.length === 0) {
-        return api.sendMessage("[💌]→ Không có danh sách chờ. Hãy tìm trước bằng .scl <từ khóa>.", threadId, threadType);
+        return api.sendMessage("Không có danh sách chờ. Hãy tìm trước bằng .scl <từ khóa>.", threadId, threadType);
       }
 
       if (pending.authorId && pending.authorId !== uid) {
-        return api.sendMessage("[💌]→ Danh sách này thuộc người khác vừa tìm. Hãy tự tìm bằng .scl <từ khóa>.", threadId, threadType);
+        return api.sendMessage("Danh sách này thuộc người khác vừa tìm. Hãy tự tìm bằng .scl <từ khóa>.", threadId, threadType);
       }
 
       if (num < 1 || num > pending.items.length) {
-        return api.sendMessage("[💌]→ Lựa chọn không hợp lệ trong danh sách.", threadId, threadType);
+        return api.sendMessage("Lựa chọn không hợp lệ trong danh sách.", threadId, threadType);
       }
 
       const chosen = pending.items[num - 1];
       try {
         let sent = null;
-        if (!silentAuto) {
-          sent = await api.sendMessage(
-            `Đang xử lý voice: ${chosen.title}\n👤 ${chosen.artist || "Unknown"}`,
-            threadId,
-            threadType
-          );
-        }
 
         const media = await fetchAudioFromAutoDown(chosen.url);
         const mp3Url = media.audioUrl;
         const quality = media.quality;
 
-        // Thông báo trước khi gửi voice trong chế độ autoPlayFirst
         let infoMsg = null;
         if (silentAuto) {
           try {
@@ -170,6 +162,17 @@ const exportDefault = {
         await downloadFile(mp3Url, rawPath);
         await convertToAac(rawPath, aacPath);
 
+        let cardPath = null;
+        try {
+          cardPath = await createSoundCloudCanvas({
+            title: chosen.title,
+            artist: chosen.artist,
+            quality,
+            thumbnailUrl: media.thumbnail,
+          });
+        } catch (e) {
+        }
+
         const uploaded = await api.uploadAttachment([aacPath], threadId, threadType);
         const voiceData = uploaded?.[0];
         if (!voiceData?.fileUrl || !voiceData?.fileName) {
@@ -177,23 +180,33 @@ const exportDefault = {
         }
         const voiceUrl = `${voiceData.fileUrl}/${voiceData.fileName}`;
 
-        await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
-
-        // Nếu không ở chế độ silentAuto, gửi thông tin sau voice như cũ
-        if (!silentAuto) {
-          try {
-            await api.sendMessage(
-              `${chosen.title}\n🔊 Chất lượng: ${quality || "n/a"}\n⏰ ${toVNTimeString()}`,
-              threadId,
-              threadType
-            );
-          } catch {}
+        const caption = `【 SOUNDLOUD 】\n🎵 ${chosen.title}\n👤 ${chosen.artist || "Unknown"}\n🔊 ${quality || "n/a"}`;
+        if (cardPath) {
+          await api.sendMessage({ msg: caption, attachments: [cardPath], ttl: 600_000 }, threadId, threadType);
+        } else {
+          await api.sendMessage(caption, threadId, threadType);
         }
 
-        let done = null; // placeholder retained for undo logic below
+        await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
+
+        // Thả reaction OK khi gửi voice thành công
+        try {
+          await api.addReaction(
+            Reactions.OK,
+            {
+              type: threadType,
+              threadId,
+              data: {
+                msgId: message.data?.msgId,
+                cliMsgId: message.data?.cliMsgId ?? 0,
+              },
+            }
+          );
+        } catch {}
+
+        let done = null; 
         if (!silentAuto) {
-          // done already sent above, capture pointer
-          // (no functional change)
+         
         }
 
         if (!silentAuto) {
@@ -216,13 +229,12 @@ const exportDefault = {
           try {
             if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
             if (fs.existsSync(aacPath)) fs.unlinkSync(aacPath);
+            if (cardPath && fs.existsSync(cardPath)) fs.unlinkSync(cardPath);
           } catch {}
         }, 5000);
       } catch (err) {
-        console.error("[SCL] Lỗi gửi voice:", err?.message || err);
         return;
       } finally {
-        
         pendingSearchByThread.delete(threadId);
       }
 
@@ -258,11 +270,20 @@ const exportDefault = {
       let listMsgId = null;
       let listCliMsgId = 0;
       if (!silentAuto) {
-        const lines = top.map((it, i) => `\n${i + 1}. 👤 ${it.artist || "Unknown"}\n📜 ${it.title}\n⏳ ${it.timestamp || "?"}`);
-        const listMessage = `【🔎】Kết quả: ${query}${lines.join("\n")}\n\n👉 Gõ: audio <số> để gửi voice (vd: audio 1)`;
-        res = await api.sendMessage(listMessage, threadId, threadType);
-        listMsgId = res?.message?.msgId ?? res?.msgId ?? null;
-        listCliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? 0;
+        try {
+          const canvasPath = await createSoundCloudResultsCanvas(top, `Kết quả: ${query}`);
+          const listMessage = `👉 Gõ: audio <số> để gửi voice (vd: audio 1)`;
+          res = await api.sendMessage({ msg: listMessage, attachments: [canvasPath] }, threadId, threadType);
+          listMsgId = res?.message?.msgId ?? res?.msgId ?? null;
+          listCliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? 0;
+        } catch (e) {
+         
+          const lines = top.map((it, i) => `\n${i + 1}. 👤 ${it.artist || "Unknown"}\n📜 ${it.title}\n⏳ ${it.timestamp || "?"}`);
+          const listMessage = `【🔎】Kết quả: ${query}${lines.join("\n")}\n\n👉 Gõ: audio <số> để gửi voice (vd: audio 1)`;
+          res = await api.sendMessage(listMessage, threadId, threadType);
+          listMsgId = res?.message?.msgId ?? res?.msgId ?? null;
+          listCliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? 0;
+        }
       }
       const saved = pendingSearchByThread.get(threadId) || {};
       saved.items = top;

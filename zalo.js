@@ -17,7 +17,7 @@ import { startTopThang } from "./Auto/TuongTacThang.js";
 import { setApiInstance } from "./App/BotInstance.js";
 import { query } from "./App/Database.js";
 import { updatesql } from "./Database/Update.js";
-import "./server.js"; 
+//import "./server.js"; 
 
 await Logger();
 await updatesql();
@@ -54,6 +54,8 @@ try {
   log("[SEPAY] - Settings Banking.", "auto");
   log("[API] - Settings Api.", "auto");
   log("[LOGIN] - Settings Login.", "auto");
+  // ngay khi nhận sự kiện message
+
   const app = express();
   const PORT = process.env.PORT || 80;
 

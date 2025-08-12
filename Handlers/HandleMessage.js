@@ -5,7 +5,7 @@ import { query } from "../App/Database.js";
 import { handleCommands } from "./HandleCommands.js";
 import { dispatchPendingReply } from "./HandleReply.js";
 import { ThreadType } from "zca-js";
-import { askGwenAndReply } from "../Api/ChatGPT.js";
+import { askGwenAndReply } from "../Api/GeminiPro.js";
 import { group } from "../Database/Group.js";
 
 function removeVietnamese(str) {
@@ -86,6 +86,7 @@ export async function handleMessage(message, api) {
   const name = message.data.dName || "Không tên";
   const threadId = message.threadId;
 //console.log(message);
+//console.log("===RAW MESSAGE===", JSON.stringify(message, null, 2));
   if (uid) {
     const [userRow] = await query("SELECT mute, mute_expire FROM users WHERE uid = ? LIMIT 1", [uid]);
     if (userRow?.mute) {

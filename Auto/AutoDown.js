@@ -3,13 +3,14 @@ import axios from "axios";
 import path from "path";
 import fs from "fs";
 import { query } from "../App/Database.js";
-import { ThreadType } from "zca-js";
+import { ThreadType, Reactions } from "zca-js";
 import { Logger, log } from "../Utils/Logger.js";
 import {
     downloadFile,
     getVideoMetadata,
     processYouTubeVideo,
-    convertToAac
+    convertToAac,
+    createSoundCloudCanvas
 } from "../Utils/GwenDev.js";
 
 
@@ -57,6 +58,19 @@ export function startAutoDown(api) {
         const allow = await isAutoDownEnabled(threadId);
         if (!allow) return;
         log(`[URL] Get Link: ${body}`, "url");
+        try {
+            await api.addReaction(
+                Reactions.OK,
+                {
+                    type: threadType,
+                    threadId,
+                    data: {
+                        msgId: msg.data?.msgId,
+                        cliMsgId: msg.data?.cliMsgId ?? 0,
+                    },
+                }
+            );
+        } catch {}
         try {
             let apiUrl;
             if (/instagram\.com|threads\.net|threads\.com/.test(body)) {
@@ -128,7 +142,11 @@ export function startAutoDown(api) {
                     return;
                 }
 
-                const video = data.medias.find(m => m.type === "video" && m.quality?.includes("no_watermark")) || data.medias.find(m => m.type === "video");
+                const videoCandidates = data.medias.filter(m => m.type === "video" && m.url);
+                const video =
+                    videoCandidates.find(m => /(?:360|480|sd)/i.test(m.quality || "")) ||
+                    videoCandidates.find(m => m.quality?.includes("no_watermark")) ||
+                    videoCandidates[0];
                 if (!video?.url) return;
 
                 const tmpPath = path.join(cacheDir, `ttvid_${Date.now()}.mov`);
@@ -287,29 +305,40 @@ export function startAutoDown(api) {
                 const video = data.medias.find(m => m.type === "video" && m.quality?.includes("no_watermark")) || data.medias.find(m => m.type === "video");
                 if (!video?.url) return;
 
-                const tmpPath = path.join(cacheDir, `ttvid_${Date.now()}.mov`);
-                let width = 720, height = 1280, duration = 0;
+                const MAX_SIZE_BYTES = 500 * 1024 * 1024;
+                const rawPath = path.join(cacheDir, `fb_${Date.now()}.mov`);
+                const processedPath = path.join(cacheDir, `fb_done_${Date.now()}.mov`);
                 try {
-                    await downloadFile(video.url, tmpPath);
-                    const metadata = await getVideoMetadata(tmpPath);
-                    width = metadata.width;
-                    height = metadata.height;
-                    duration = metadata.duration;
-                } catch (err) {
-                    log.warn(`[URL] Error Video Metadata: ${err.message}`);
-                } finally {
-                    cleanupFiles([tmpPath], 0);
-                }
+                    await downloadFile(video.url, rawPath);
+                    await processYouTubeVideo(rawPath, processedPath);
 
-                await api.sendVideo({
-                    videoUrl: video.url,
-                    thumbnailUrl: video.thumbnail || data.thumbnail || video.url,
-                    msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤   \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
-                    width,
-                    height,
-                    duration: duration * 1000,
-                    ttl: 500_000
-                }, threadId, threadType);
+                    const { size } = fs.statSync(processedPath);
+                    if (size > MAX_SIZE_BYTES) {
+                        return;
+                    }
+
+                    const metadata = await getVideoMetadata(processedPath);
+                    const uploaded = await api.uploadAttachment([processedPath], threadId, threadType);
+                    const videoFile = uploaded?.[0];
+                    if (!videoFile?.fileUrl || !videoFile?.fileName) {
+                        return;
+                    }
+
+                    const uploadedUrl = `${videoFile.fileUrl}/${videoFile.fileName}`;
+                    await api.sendVideo({
+                        videoUrl: uploadedUrl,
+                        thumbnailUrl: video.thumbnail || data.thumbnail || uploadedUrl,
+                        msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤   \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
+                        width: metadata.width,
+                        height: metadata.height,
+                        duration: metadata.duration * 1000,
+                        ttl: 500_000
+                    }, threadId, threadType);
+                } catch (err) {
+                    
+                } finally {
+                    cleanupFiles([rawPath, processedPath], 0);
+                }
                 return;
             }
             if (["capcut"].includes(source) || /capcut\.com/.test(body)) {
@@ -665,36 +694,43 @@ if (source.includes("xvideos") || /xvideos\.com|xvide\.os/.test(body)) {
     return;
 }
 
-if (source === "soundcloud" || /soundcloud\.com/.test(body)) {
+            if (source === "soundcloud" || /soundcloud\.com/.test(body)) {
     const audio = data.medias.find(m => m.type === "audio");
-    if (!audio?.url) return;
+    if (!audio?.url) { return; }
 
     const tempPath = path.join(cacheDir, `sc_${Date.now()}`);
     const aacPath = `${tempPath}.aac`;
     const attachments = [];
+    let cardPath = null;
     try {
         await downloadFile(audio.url, tempPath);
         await convertToAac(tempPath, aacPath);
 
-        if (data.thumbnail) {
-            const imagePath = path.join(cacheDir, `scimg_${Date.now()}.jpg`);
-            await downloadFile(data.thumbnail, imagePath);
-            attachments.push(imagePath);
-        }
-        await api.sendMessage({
-           msg: `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐒𝐨𝐮𝐧𝐝𝐂𝐥𝐨𝐮𝐝 \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`,
-            attachments,
-            ttl: 500_000
-        }, threadId, threadType);
+        try {
+            cardPath = await createSoundCloudCanvas({
+                title: mediaTitle,
+                artist: author,
+                quality: audio.quality || audio.format || "",
+                thumbnailUrl: data.thumbnail || "",
+            });
+        } catch (e) {}
+
         const uploaded = await api.uploadAttachment([aacPath], threadId, threadType);
         const voiceData = uploaded?.[0];
-        if (voiceData?.fileUrl && voiceData?.fileName) {
+        if (!voiceData?.fileUrl || !voiceData?.fileName) {
+        } else {
             const voiceUrl = `${voiceData.fileUrl}/${voiceData.fileName}`;
+            const caption = `/-li 𝐀𝐮𝐭𝐨𝐃𝐨𝐰𝐧: 𝐒𝐨𝐮𝐧𝐝𝐂𝐥𝐨𝐮𝐝   \n📄 𝐓𝐢𝐭𝐭𝐥𝐞: ${mediaTitle}\n👤 𝐀𝐮𝐭𝐡𝐨𝐫: ${author}`;
+            if (cardPath) {
+                await api.sendMessage({ msg: caption, attachments: [cardPath], ttl: 600_000 }, threadId, threadType);
+            } else {
+                await api.sendMessage({ msg: caption, ttl: 600_000 }, threadId, threadType);
+            }
             await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
         }
     } catch (err) {
     } finally {
-        cleanupFiles([tempPath, aacPath, ...attachments]);
+        cleanupFiles([tempPath, aacPath, cardPath].filter(Boolean));
     }
     return;
 }
