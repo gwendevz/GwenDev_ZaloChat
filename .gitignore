@@ -152,6 +152,6 @@ yarn-error.log*
 Thumbs.db
 # Ignore sensitive app files
 App/Cookie.json
-App/Settings.json
+# App/Settings.json
 App/Cookie.js
-App/Settings.js
+# App/Settings.js
