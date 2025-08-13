@@ -3,7 +3,7 @@ import path from "path";
 import axios from "axios";
 import { ThreadType } from "zca-js";
 import { log } from "../../Utils/Logger.js";
-import { suggestMove, loadLearnConfig, openGameLog, appendGameLog, learnFromOutcome } from "../../Api/CaroApi.js";
+import { suggestMove, loadLearnConfig, openGameLog, appendGameLog, learnFromOutcome } from "../../Api/Caro/CaroApi.js";
 import {
   dangKyReply,
   datChoPhanHoi,

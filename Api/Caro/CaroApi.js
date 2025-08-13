@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
-import { settings } from "../App/Settings.js";
+import { settings } from "../../App/Settings.js";
 
 // ===== Prompts (from CaroPrompt.js) =====
 const BASE_HEADER = `

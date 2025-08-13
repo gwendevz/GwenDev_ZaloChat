@@ -6,18 +6,18 @@ import sepayWebhook from "./Routes/sepayWebhook.js";
 import { Zalo } from "zca-js";
 import { settings } from "./App/Settings.js";
 import { init } from "./Handlers/Core.js";
-import { startAutoDown } from "./Auto/AutoDown.js";
-import { startAutoSend } from "./Auto/AutoSend.js";
-import { startAntiSpam } from "./Anti/AntiSpam.js"; 
-import { startAntiLink } from "./Anti/AntiLink.js";
+import { startAutoDown } from "./Core/Auto/AutoDown.js";
+import { startAutoSend } from "./Core/Auto/AutoSend.js";
+import { startAntiSpam } from "./Core/Anti/AntiSpam.js";
+import { startAntiLink } from "./Core/Anti/AntiLink.js";
 import { Logger, log } from "./Utils/Logger.js";
-import { startTopNgay } from "./Auto/TuongTacNgay.js";
-import { startTopTuan } from "./Auto/TuongTacTuan.js";
-import { startTopThang } from "./Auto/TuongTacThang.js";
+import { startTopNgay } from "./Core/Auto/TuongTacNgay.js";
+import { startTopTuan } from "./Core/Auto/TuongTacTuan.js";
+import { startTopThang } from "./Core/Auto/TuongTacThang.js";
 import { setApiInstance } from "./App/BotInstance.js";
 import { query } from "./App/Database.js";
 import { updatesql } from "./Database/Update.js";
-//import "./server.js"; 
+import "./server.js"; 
 
 await Logger();
 await updatesql();
@@ -54,8 +54,6 @@ try {
   log("[SEPAY] - Settings Banking.", "auto");
   log("[API] - Settings Api.", "auto");
   log("[LOGIN] - Settings Login.", "auto");
-  // ngay khi nhận sự kiện message
-
   const app = express();
   const PORT = process.env.PORT || 80;
 

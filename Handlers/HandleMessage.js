@@ -5,7 +5,7 @@ import { query } from "../App/Database.js";
 import { handleCommands } from "./HandleCommands.js";
 import { dispatchPendingReply } from "./HandleReply.js";
 import { ThreadType } from "zca-js";
-import { askGwenAndReply } from "../Api/GeminiPro.js";
+import { askGwenAndReply } from "../Api/Gemini/GeminiPro.js";
 import { group } from "../Database/Group.js";
 
 function removeVietnamese(str) {

@@ -2,16 +2,16 @@
 import axios from "axios";
 import path from "path";
 import fs from "fs";
-import { query } from "../App/Database.js";
+import { query } from "../../App/Database.js";
 import { ThreadType, Reactions } from "zca-js";
-import { Logger, log } from "../Utils/Logger.js";
+import { Logger, log } from "../../Utils/Logger.js";
 import {
     downloadFile,
     getVideoMetadata,
     processYouTubeVideo,
     convertToAac,
     createSoundCloudCanvas
-} from "../Utils/GwenDev.js";
+} from "../../Utils/GwenDev.js";
 
 
 const SUPPORTED_LINKS = [

@@ -1,5 +1,5 @@
 // author @GwenDev
-import { query } from "../App/Database.js";
+import { query } from "../../App/Database.js";
 
 const WHITELISTED_DOMAINS = ["gwendev.com"];
 

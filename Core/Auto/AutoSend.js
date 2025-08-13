@@ -2,9 +2,9 @@
 import cron from "node-cron";
 import fs from "fs";
 import path from "path";
-import { query } from "../App/Database.js";
+import { query } from "../../App/Database.js";
 import { ThreadType } from "zca-js";
-import { log } from "../Utils/Logger.js";
+import { log } from "../../Utils/Logger.js";
 const CONFIG_PATH = path.join("App", "AutoSend.json");
 const ATTACH_DIR = path.join("Data", "AutoSend");
 function readAutoSendConfig() {

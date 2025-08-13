@@ -13,6 +13,12 @@ const DATA_PATH = path.join(DATA_DIR, "questions.json");
 const REWARD_ARR = [
   1000, 2000, 3000, 5000, 7000, 10000, 15000, 22000, 30000, 40000, 55000, 70000, 90000, 120000, 150000,
 ];
+
+const MODE_MULT = { easy: 1, normal: 2, hard: 3 };
+function buildRewardArr(mode = 'normal') {
+  const mult = MODE_MULT[mode] || 1;
+  return REWARD_ARR.map(v => v * mult);
+}
 let DATASET = null;
 function loadDataset(filePath) {
   if (DATASET) return DATASET;
@@ -81,6 +87,7 @@ export default {
         const QUESTIONS = [...dataset];
         QUESTIONS.sort(() => Math.random() - 0.5);
         const maxQ = Math.min(15, QUESTIONS.length);
+        const rewardArr = buildRewardArr(mode);
         const game = {
           index: 0,
           uid,
@@ -90,6 +97,7 @@ export default {
           lifelineAudience:false,
           questions: QUESTIONS.slice(0, maxQ),
           timerId: null,
+          rewardArr,
           mode
         };
         ACTIVE_GAMES.set(threadId, game);
@@ -152,7 +160,7 @@ export default {
           ctx.font = '18px Arial';
           ctx.textAlign = 'right';
           const milestoneIdx = [4, 9, 14];
-          REWARD_ARR.forEach((val, i) => {
+          rewardArr.forEach((val, i) => {
             const y = 100 + i * 28;
             if (i === idx) {
               ctx.fillStyle = '#ffdf00';
@@ -241,7 +249,7 @@ export default {
               if (!(ans in map)) { await api.sendMessage('⚙️ Vui Lòng Reply Tin Nhắn Bot\n•  A B C D -> Trả Lời Câu Hỏi\n•  call -> Gọi Trợ Giúp Người Thân\n•  ask -> Hỏi Ý Kiến Khán Giả\n•  stop -> Dừng Cuộc Chơi & Nhận Thưởng', threadId, threadType); return { clear: false }; }
               const choice = map[ans]; const correct = choice === qObj._displayCorrect;
               if (correct) {
-                const add = REWARD_ARR[game.index] || 0; game.winnings += add; await query("UPDATE users SET coins = COALESCE(coins,0) + ? WHERE uid = ?", [add, uid]);
+                const add = game.rewardArr[game.index] || 0; game.winnings += add; await query("UPDATE users SET coins = COALESCE(coins,0) + ? WHERE uid = ?", [add, uid]);
                 if (game.index + 1 >= maxQ) {
                   await api.sendMessage(`[ SUPER ] • Chúc Mừng Bạn Trở Thành Triệu Phú Và Nhận Về: ${game.winnings.toLocaleString()}$`, threadId, threadType);
                   await query('UPDATE users SET altp_max = GREATEST(COALESCE(altp_max,0), ?) WHERE uid = ?', [game.index, uid]);
@@ -389,7 +397,8 @@ export default {
     }
     const QUESTIONS = [...dataset]; QUESTIONS.sort(() => Math.random() - 0.5);
     const maxQ = Math.min(15, QUESTIONS.length);
-    const game = { index: 0, uid, winnings: 0, lifeline5050:false, lifelineCall:false, lifelineAudience:false, questions: QUESTIONS.slice(0, maxQ), timerId: null, mode: 'normal' };
+    const rewardArr = buildRewardArr('normal');
+    const game = { index: 0, uid, winnings: 0, lifeline5050:false, lifelineCall:false, lifelineAudience:false, questions: QUESTIONS.slice(0, maxQ), timerId: null, rewardArr, mode: 'normal' };
     ACTIVE_GAMES.set(threadId, game);
     const CACHE_DIR = path.resolve("Data", "Cache", "AiLaTrieuPhu");
     if (!fs.existsSync(CACHE_DIR)) await fs.promises.mkdir(CACHE_DIR, { recursive: true });
@@ -465,7 +474,7 @@ export default {
       ctx.font = '18px Arial';
       ctx.textAlign = 'right';
       const milestoneIdx = [4, 9, 14];
-      REWARD_ARR.forEach((val, i) => {
+      rewardArr.forEach((val, i) => {
         const y = 100 + i * 28; 
         if (i === idx) {
           ctx.fillStyle = '#ffdf00';
@@ -625,7 +634,7 @@ ${msgPoll}`, threadId, threadType);
           const choice = map[ans];
           const correct = choice === qObj._displayCorrect;
           if (correct) {
-            const add = REWARD_ARR[game.index] || 0;
+            const add = game.rewardArr[game.index] || 0;
             game.winnings += add;
             await query("UPDATE users SET coins = COALESCE(coins,0) + ? WHERE uid = ?", [add, uid]);
             if (game.index + 1 >= maxQ) {

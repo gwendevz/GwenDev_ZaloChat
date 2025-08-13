@@ -25,15 +25,16 @@ GwenDev_ZaloChat/
 │   ├── Settings.js         # Setup Imei & UserAgent
 │   ├── BotInstance.js      # Api Xử Lý Sepay
 │   └── Database.js         # Setup Database MySQL
-├── Auto/
-│   ├── AutoDown.js         # Auto Downloads Từ 10+ Nển Tảng
-│   ├── AutoSend.js         # AutoSend Text / Audio / File / Image
-│   ├── TuongTacNgay.js     # Auto Send Top Day
-│   ├── TuongTacTuan.js     # Auto Send Top Week
-│   └── TuongTacThang.js    # Auto Send Top Month
-├── Anti/
-│   ├── AntiSpam.js         # Cấm Spam
-│   └── AntiLink.js         # Cấm Gửi Link
+├── Core/
+│   ├── Auto/
+│   │   ├── AutoDown.js         # Auto Downloads Từ 10+ Nền Tảng
+│   │   ├── AutoSend.js         # AutoSend Text / Audio / File / Image
+│   │   ├── TuongTacNgay.js     # Auto Send Top Day
+│   │   ├── TuongTacTuan.js     # Auto Send Top Week
+│   │   └── TuongTacThang.js    # Auto Send Top Month
+│   └── Anti/
+│       ├── AntiSpam.js         # Cấm Spam
+│       └── AntiLink.js         # Cấm Gửi Link
 ├── Handlers/
 │   └── Core.js             # Logic Xử Lý Event 
 ├── zalo.js                 # Điều Hướng Các File

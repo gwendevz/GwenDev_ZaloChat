@@ -1,6 +1,6 @@
 // author @GwenDev
-import { query } from "../App/Database.js";
-import { log } from "../Utils/Logger.js";
+import { query } from "../../App/Database.js";
+import { log } from "../../Utils/Logger.js";
 const SPAM_LIMITS = {
   warning1: 3,
   warning2: 5,

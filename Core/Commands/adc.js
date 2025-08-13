@@ -3,13 +3,11 @@ import axios from "axios";
 import path from "path";
 import { load as cheerioLoad } from "cheerio";
 import { fileURLToPath } from "url";
-
-const DP_API = "https://dpaste.com/api/v2/";
-const DP_TOKEN = "c087cb45e6f9fd75";
+import { settings } from "../../App/Settings.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const commandsDir = __dirname; // Core/Commands folder
+const commandsDir = __dirname; 
 
 /**
  * Upload a local file to dpaste and return both the normal & raw link
@@ -23,9 +21,9 @@ async function uploadToDpaste(filePath) {
     title: path.basename(filePath),
     expiry_days: "365",
   });
-  const { data } = await axios.post(DP_API, payload, {
+  const { data } = await axios.post(settings.dpasteApi, payload, {
     headers: {
-      Authorization: `Bearer ${DP_TOKEN}`,
+      Authorization: `Bearer ${settings.dpasteToken}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     responseType: "text",

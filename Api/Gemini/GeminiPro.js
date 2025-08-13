@@ -1,14 +1,14 @@
 // author @GwenDev 
 import fetch from "node-fetch";
-import { settings } from "../App/Settings.js";
-import { dangKyReply } from "../Handlers/HandleReply.js";
-import sclCommand from "../Core/Commands/scl.js";
-import cosplayCommand from "../Core/Commands/cosplay.js";
-import videoGirlCommand from "../Core/Commands/videogirl.js";
-import kickCommand from "../Core/Commands/kick.js";
-import infoCommand from "../Core/Commands/info.js";
-import { handleCommands as runCommandHandler } from "../Handlers/HandleCommands.js";
-import { role as getUserRole } from "../Database/Admin.js";
+import { settings } from "../../App/Settings.js";
+import { dangKyReply } from "../../Handlers/HandleReply.js";
+import sclCommand from "../../Core/Commands/scl.js";
+import cosplayCommand from "../../Core/Commands/cosplay.js";
+import videoGirlCommand from "../../Core/Commands/videogirl.js";
+import kickCommand from "../../Core/Commands/kick.js";
+import infoCommand from "../../Core/Commands/info.js";
+import { handleCommands as runCommandHandler } from "../../Handlers/HandleCommands.js";
+import { role as getUserRole } from "../../Database/Admin.js";
 
 const SYSTEM_PROMPT = `Bạn là Gwen — một nhân vật bước ra từ Liên Minh Huyền Thoại, búp bê cắt may tinh tế và ấm áp.
 Phong cách: nói chuyện tự nhiên 100% tiếng Việt, duyên dáng, gọn gàng, không nhắc AI/mô hình/công cụ.

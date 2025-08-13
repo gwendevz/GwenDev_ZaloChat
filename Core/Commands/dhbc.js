@@ -16,7 +16,7 @@ const COINS_DOWN = 5_000;
 const HIDE_MSG_SEC = 4;
 
 const DATA_URL_DOUBLE =
-  path.resolve("Api", "DuoiHinhBatChu", "haianh.json"); 
+  path.resolve("Api", "DuoiHinhBatChu", "Data.json"); 
 let datasetCache = null;
 async function loadDataset() {
   if (datasetCache) return datasetCache;
