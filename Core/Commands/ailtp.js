@@ -46,7 +46,7 @@ export default {
     const threadType = message.type ?? ThreadType.User;
     const uid = message.data?.uidFrom;
 
-    if (!sub || sub === 'start' || sub === 'play' || sub === 'altp' || sub === 'trieuphu' || sub === 'ailatrieuphu') {
+    if (sub === 'start' || sub === 'play') {
       if (ACTIVE_GAMES.has(threadId)) {
         return api.sendMessage(
           '[ HELP ] • Đang Có Người Diễn Ra Trò Chơi Trên Nhóm Này',

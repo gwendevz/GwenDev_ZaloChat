@@ -8,7 +8,6 @@ import bodyParser from "body-parser";
 import fs from "fs";
 import { query } from "./App/Database.js";
 import { settings } from "./App/Settings.js";
-import { spawn } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +15,6 @@ const __dirname = path.dirname(__filename);
 let botStartTime = Date.now();
 let botApi = null;
 let io = null;
-let botProcess = null;
 
 const app = express();
 const server = createServer(app);
@@ -30,7 +28,7 @@ io = new Server(server, {
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'views','public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -193,39 +191,12 @@ app.post('/api/users/update', async (req, res) => {
 });
 io.on('connection', (socket) => {
     console.log('Client connected to console');
-    socket.on('command', async (data) => {
-        const cmd = String(data?.command||"").trim();
-        if(!cmd) return;
-        const { exec } = await import('child_process');
-        exec(cmd,{shell:true,windowsHide:true},(err,stdout,stderr)=>{
-          if(stdout) socket.emit('output', stdout);
-          if(stderr) socket.emit('output', stderr);
-          if(err) socket.emit('output', err.message);
-        });
+    
+    socket.on('command', (data) => {
+        console.log('Received command:', data.command);
+        socket.emit('output', `> ${data.command}\nCommand executed successfully`);
     });
-    socket.on('bot-action', ({ action }) => {
-        const send = (msg) => socket.emit('console-log', msg);
-        if (action === 'run') {
-            if (botProcess) { send('[BOT] Bot already running'); return; }
-            botProcess = spawn('node', ['zalo.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
-            botProcess.stdout.on('data', d => io.emit('output', d.toString()));
-            botProcess.stderr.on('data', d => io.emit('output', d.toString()));
-            botProcess.on('close', c => { io.emit('console-log', `[BOT] exited ${c}`); botProcess = null; });
-            send('[BOT] started');
-        } else if (action === 'stop') {
-            if (!botProcess) { send('[BOT] not running'); return; }
-            botProcess.kill();
-            botProcess = null;
-            send('[BOT] stopped');
-        } else if (action === 'restart') {
-            if (botProcess) { botProcess.kill(); botProcess = null; }
-            botProcess = spawn('node', ['zalo.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
-            botProcess.stdout.on('data', d => io.emit('output', d.toString()));
-            botProcess.stderr.on('data', d => io.emit('output', d.toString()));
-            botProcess.on('close', c => { io.emit('console-log', `[BOT] exited ${c}`); botProcess = null; });
-            send('[BOT] restarted');
-        }
-    });
+    
     socket.on('disconnect', () => {
         console.log('Client disconnected from console');
     });
