@@ -1,3 +1,4 @@
+// author @GwenDev
 import { query } from "../../App/Database.js";
 import { ThreadType } from "zca-js";
 import { dangKyReply } from "../../Handlers/HandleReply.js";
@@ -10,16 +11,14 @@ export default {
   aliases: ["thông báo", "tb"],
   noPrefix: false,
 
-  /**
-   * @param {{ message: any, api: any, args: string[] }}
-   */
+  
   async run({ message, api, args }) {
     const originThreadId = message.threadId;
     const originThreadType = message.type ?? ThreadType.User;
 
     if (!args || args.length === 0) {
       return api.sendMessage(
-        "Vui lòng nhập nội dung thông báo. VD: .thongbao Nội dung muốn gửi.",
+        { msg: "Vui lòng nhập nội dung thông báo. VD: .thongbao Nội dung muốn gửi.", ttl: 12*60*60_000 },
         originThreadId,
         originThreadType
       );
@@ -55,7 +54,7 @@ export default {
       const rows = await query("SELECT thread_id, name FROM groups");
       if (!rows || rows.length === 0) {
         return api.sendMessage(
-          "Không tìm thấy nhóm nào trong database để gửi thông báo.",
+          { msg: "Không tìm thấy nhóm nào trong database để gửi thông báo.", ttl: 12*60*60_000 },
           originThreadId,
           originThreadType
         );
@@ -67,7 +66,7 @@ export default {
 
       for (const { thread_id, name: gname } of rows) {
         try {
-          const sent = await api.sendMessage(notifyMsg, thread_id, ThreadType.Group);
+          const sent = await api.sendMessage({ msg: notifyMsg, ttl: 12*60*60_000 }, thread_id, ThreadType.Group);
           success++;
           successGroups.push(gname || thread_id);
           const msgId = sent?.message?.msgId ?? sent?.msgId ?? null;
@@ -124,7 +123,7 @@ export default {
                                   const adminSent2 = await api.sendMessage(replyText2, again.originThreadId, again.originThreadType);
                                    const aMsgId2 = adminSent2?.message?.msgId ?? adminSent2?.msgId ?? null;
                                   const aCliMsgId2 = adminSent2?.message?.cliMsgId ?? adminSent2?.cliMsgId ?? null;
-                                  if (aMsgId2 || aCliMsgId2) {
+               if (aMsgId2 || aCliMsgId2) {
                                     dangKyReply({
                                       msgId: aMsgId2,
                                       cliMsgId: aCliMsgId2,
@@ -134,8 +133,8 @@ export default {
                                       data: { targetThreadId: gReply.threadId, targetThreadType: gReply.type },
                                       onReply: async ({ message: adminRe2, api, content: aContent2, data: dataX }) => {
                                         try {
-                                          const gSent2 = await api.sendMessage(`Tin nhắn từ Admin: ${aContent2}`, dataX.targetThreadId, ThreadType.Group);
-                                          await api.sendMessage(`Đã gửi tin nhắn tới nhóm \"${dataX.targetThreadName || dataX.targetThreadId}\"`, adminRe2.threadId, adminRe2.type);
+                      const gSent2 = await api.sendMessage({ msg: `Tin nhắn từ Admin: ${aContent2}`, ttl: 12*60*60_000 }, dataX.targetThreadId, ThreadType.Group);
+                      await api.sendMessage({ msg: `Đã gửi tin nhắn tới nhóm \"${dataX.targetThreadName || dataX.targetThreadId}\"`, ttl: 12*60*60_000 }, adminRe2.threadId, adminRe2.type);
 
                                           const gMsgId2 = gSent2?.message?.msgId ?? gSent2?.msgId ?? null;
                                           const gCliMsgId2 = gSent2?.message?.cliMsgId ?? gSent2?.cliMsgId ?? null;
@@ -152,7 +151,7 @@ export default {
                                                 const groupName3 = gReply2.threadName || gReply2.threadId;
                                                 const replyText3 = `📩 Phản hồi từ nhóm "${groupName3}"\n👤 ${senderName3}: ${gContent2}`;
                                                 try {
-                                                  const adminSent3 = await api.sendMessage(replyText3, again2.originThreadId, again2.originThreadType);
+                                                 const adminSent3 = await api.sendMessage({ msg: replyText3, ttl: 12*60*60_000 }, again2.originThreadId, again2.originThreadType);
                                                   const aMsgId3 = adminSent3?.message?.msgId ?? adminSent3?.msgId ?? null;
                                                   const aCliMsgId3 = adminSent3?.message?.cliMsgId ?? adminSent3?.cliMsgId ?? null;
                                                   if (aMsgId3 || aCliMsgId3) {
@@ -165,8 +164,8 @@ export default {
                                                       data: { targetThreadId: gReply2.threadId, targetThreadType: gReply2.type },
                                                       onReply: async ({ message: adminRe3, api, content: aContent3, data: dataY }) => {
                                                         try {
-                                                          const gSent3 = await api.sendMessage(`Tin nhắn từ Admin: ${aContent3}`, dataY.targetThreadId, ThreadType.Group);
-                                                          await api.sendMessage(`Đã gửi tin nhắn tới nhóm \"${dataY.targetThreadName || dataY.targetThreadId}\"`, adminRe3.threadId, adminRe3.type);
+                                                           const gSent3 = await api.sendMessage({ msg: `Tin nhắn từ Admin: ${aContent3}`, ttl: 12*60*60_000 }, dataY.targetThreadId, ThreadType.Group);
+                                                           await api.sendMessage({ msg: `Đã gửi tin nhắn tới nhóm \"${dataY.targetThreadName || dataY.targetThreadId}\"`, ttl: 12*60*60_000 }, adminRe3.threadId, adminRe3.type);
                                                           return { clear: false };
                                                         } catch (e3) {
                                                           console.warn("[thongbao] Không thể gửi phản hồi của admin:", e3?.message || e3);
@@ -218,14 +217,14 @@ export default {
 
       const groupListText = successGroups.map((n, idx) => `${idx + 1}. ${n}`).join("\n");
       await api.sendMessage(
-        `Đã gửi thông báo đến ${success} nhóm:\n${groupListText}\n\nKhông gửi được đến ${fail} nhóm.`,
+        { msg: `Đã gửi thông báo đến ${success} nhóm:\n${groupListText}\n\nKhông gửi được đến ${fail} nhóm.`, ttl: 12*60*60_000 },
         originThreadId,
         originThreadType
       );
     } catch (err) {
       console.error("[thongbao] Lỗi khi gửi thông báo:", err);
       return api.sendMessage(
-        "Đã xảy ra lỗi khi gửi thông báo!",
+        { msg: "Đã xảy ra lỗi khi gửi thông báo!", ttl: 12*60*60_000 },
         originThreadId,
         originThreadType
       );

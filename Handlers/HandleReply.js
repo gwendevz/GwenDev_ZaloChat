@@ -250,7 +250,6 @@ export function dangKyReply({ msgId, cliMsgId, threadId, authorId, command, data
   const entry = {
     msgId: msgId ? String(msgId) : undefined,
     cliMsgId: cliMsgId ? String(cliMsgId) : undefined,
-    // Tự động map để logic quote checking hoạt động
     listMsgId: msgId ? String(msgId) : undefined,
     listCliMsgId: cliMsgId ? String(cliMsgId) : undefined,
     threadId: String(threadId),

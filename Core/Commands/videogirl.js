@@ -36,7 +36,7 @@ export default {
     const threadType = message.type;
 
     try {
-      const filePath = path.resolve("Api", "Data", "VideoGirl.json");
+      const filePath = path.resolve("Api", "Data","Video","VideoGirl.json");
       const rawData = await fs.readFile(filePath, "utf-8");
       const videoList = JSON.parse(rawData);
 

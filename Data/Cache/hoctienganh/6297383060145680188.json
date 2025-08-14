@@ -4,8 +4,204 @@
   "score": 12,
   "total": 56,
   "difficulty": "medium",
-  "last": [
-    "if you could have dinner with any person, who would it be and why?",
-    "what is your favorite hobby and why?"
-  ]
+  "last": 0,
+  "state": {
+    "mode": "test",
+    "list": [
+      {
+        "q": "Which animal is known for its black and white stripes?",
+        "a": "Tiger",
+        "b": "Zebra",
+        "c": "Panda",
+        "d": "Skunk",
+        "ans": "B"
+      },
+      {
+        "q": "How many sides does a square have?",
+        "a": "3",
+        "b": "4",
+        "c": "5",
+        "d": "6",
+        "ans": "B"
+      },
+      {
+        "q": "The opposite of 'hot' is?",
+        "a": "warm",
+        "b": "cool",
+        "c": "cold",
+        "d": "heat",
+        "ans": "C"
+      },
+      {
+        "q": "Which is the fastest land animal?",
+        "a": "Cheetah",
+        "b": "Tiger",
+        "c": "Horse",
+        "d": "Leopard",
+        "ans": "A"
+      },
+      {
+        "q": "What is the capital of Japan?",
+        "a": "Beijing",
+        "b": "Tokyo",
+        "c": "Seoul",
+        "d": "Kyoto",
+        "ans": "B"
+      },
+      {
+        "q": "Which continent is Egypt in?",
+        "a": "Asia",
+        "b": "Africa",
+        "c": "Europe",
+        "d": "South America",
+        "ans": "B"
+      },
+      {
+        "q": "What is the largest mammal?",
+        "a": "Elephant",
+        "b": "Blue Whale",
+        "c": "Giraffe",
+        "d": "Hippopotamus",
+        "ans": "B"
+      },
+      {
+        "q": "Which planet is known as the Red Planet?",
+        "a": "Venus",
+        "b": "Mars",
+        "c": "Jupiter",
+        "d": "Saturn",
+        "ans": "B"
+      },
+      {
+        "q": "What is the capital of Australia?",
+        "a": "Sydney",
+        "b": "Melbourne",
+        "c": "Canberra",
+        "d": "Perth",
+        "ans": "C"
+      },
+      {
+        "q": "The Great Pyramid of Giza is in which country?",
+        "a": "Iraq",
+        "b": "Egypt",
+        "c": "Iran",
+        "d": "Sudan",
+        "ans": "B"
+      },
+      {
+        "q": "The tallest mountain in the world is?",
+        "a": "K2",
+        "b": "Mount Everest",
+        "c": "Kangchenjunga",
+        "d": "Makalu",
+        "ans": "B"
+      },
+      {
+        "q": "How many continents are there?",
+        "a": "5",
+        "b": "6",
+        "c": "7",
+        "d": "8",
+        "ans": "C"
+      },
+      {
+        "q": "How many days are there in a leap year?",
+        "a": "365",
+        "b": "366",
+        "c": "364",
+        "d": "367",
+        "ans": "B"
+      },
+      {
+        "q": "Water boils at what temperature (°C)?",
+        "a": "90",
+        "b": "100",
+        "c": "110",
+        "d": "120",
+        "ans": "B"
+      },
+      {
+        "q": "How many hours are in a day?",
+        "a": "12",
+        "b": "24",
+        "c": "48",
+        "d": "60",
+        "ans": "B"
+      },
+      {
+        "q": "Who invented the telephone?",
+        "a": "Alexander Graham Bell",
+        "b": "Thomas Edison",
+        "c": "Nikola Tesla",
+        "d": "Albert Einstein",
+        "ans": "A"
+      },
+      {
+        "q": "Which ocean is on the east coast of the United States?",
+        "a": "Pacific",
+        "b": "Atlantic",
+        "c": "Indian",
+        "d": "Arctic",
+        "ans": "B"
+      },
+      {
+        "q": "How many minutes are in an hour?",
+        "a": "30",
+        "b": "60",
+        "c": "90",
+        "d": "120",
+        "ans": "B"
+      },
+      {
+        "q": "Who discovered gravity?",
+        "a": "Albert Einstein",
+        "b": "Isaac Newton",
+        "c": "Galileo Galilei",
+        "d": "Nikola Tesla",
+        "ans": "B"
+      },
+      {
+        "q": "The Sun is a?",
+        "a": "Planet",
+        "b": "Star",
+        "c": "Moon",
+        "d": "Comet",
+        "ans": "B"
+      },
+      {
+        "q": "Which fruit is yellow and curved?",
+        "a": "Banana",
+        "b": "Mango",
+        "c": "Lemon",
+        "d": "Pineapple",
+        "ans": "A"
+      },
+      {
+        "q": "What is the main language spoken in Brazil?",
+        "a": "Spanish",
+        "b": "Portuguese",
+        "c": "French",
+        "d": "English",
+        "ans": "B"
+      },
+      {
+        "q": "What is the past tense of 'go'?",
+        "a": "goed",
+        "b": "went",
+        "c": "goes",
+        "d": "gone",
+        "ans": "B"
+      },
+      {
+        "q": "Which is the largest internal organ in the human body?",
+        "a": "Heart",
+        "b": "Liver",
+        "c": "Lung",
+        "d": "Kidney",
+        "ans": "B"
+      }
+    ],
+    "idx": 1,
+    "correct": 0
+  }
 }

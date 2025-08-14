@@ -1,3 +1,4 @@
+// author @GwenDev
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -15,7 +16,7 @@ process.stderr.write = (chunk, encoding, cb) => {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const CACHE_DIR = path.join(__dirname, "cache");
+const CACHE_DIR = path.resolve("Data", "Cache", "ChanleMoMo");
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 
@@ -44,40 +45,39 @@ export default {
     const uid = message.data?.uidFrom;
 
     if (!uid) {
-      return api.sendMessage("Không xác định được người dùng!", threadId, threadType);
+      return api.sendMessage({ msg: "Không xác định được người dùng!", ttl: 60_000 }, threadId, threadType);
     }
 
     const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
     if (!userExists) {
-      return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);
+      return api.sendMessage({ msg: "Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", ttl: 60_000 }, threadId, threadType);
     }
 
     const content = (args[0] || "").toLowerCase();
     const coinsStr = args[1] || "";
 
     if (!content) {
-      return api.sendMessage(
-        " Hướng dẫn: .clmomo [c|l|c2|l2|n1|n2|n3|n0|t|x|t2|x2] <số tiền>",
-        threadId,
-        threadType
-      );
+      return api.sendMessage({ 
+        msg: " Hướng dẫn: .clmomo [c|l|c2|l2|n1|n2|n3|n0|t|x|t2|x2] <số tiền>",
+        ttl: 60_000,
+      }, threadId, threadType);
     }
 
     if (!coinsStr) {
-      return api.sendMessage("Vui lòng nhập số tiền cược!", threadId, threadType);
+      return api.sendMessage({ msg: "Vui lòng nhập số tiền cược!", ttl: 60_000 }, threadId, threadType);
     }
 
     const coins = parseInt(coinsStr, 10);
     if (isNaN(coins) || coins < 50) {
-      return api.sendMessage("Số tiền cược tối thiểu là 50!", threadId, threadType);
+      return api.sendMessage({ msg: "Số tiền cược tối thiểu là 50!", ttl: 60_000 }, threadId, threadType);
     }
     if (coins > 1_000_000) {
-      return api.sendMessage("Số tiền cược tối đa là 1.000.000!", threadId, threadType);
+      return api.sendMessage({ msg: "Số tiền cược tối đa là 1.000.000!", ttl: 60_000 }, threadId, threadType);
     }
 
     const bal = await getBalance(uid);
     if (bal < coins) {
-      return api.sendMessage("Bạn không đủ tiền để cược!", threadId, threadType);
+      return api.sendMessage({ msg: "Bạn không đủ tiền để cược!", ttl: 60_000 }, threadId, threadType);
     }
 
     const codeGD = String(Math.floor(Math.random() * 90000000000) + 10000000000);
@@ -119,7 +119,7 @@ export default {
     const list = groups[content];
     if (!list) {
       await subCoins(uid, coins); 
-      return api.sendMessage("Sai nội dung hoặc không hỗ trợ! Tiền cược đã bị trừ.", threadId, threadType);
+      return api.sendMessage({ msg: "Sai nội dung hoặc không hỗ trợ! Tiền cược đã bị trừ.", ttl: 60_000 }, threadId, threadType);
     }
 
     const isWin = list.includes(lastNumber);
@@ -157,7 +157,7 @@ export default {
     ];
     const bgPath = bgPathCandidates.find(p => fs.existsSync(p));
     if (!bgPath) {
-      return api.sendMessage("Không tìm thấy ảnh nền chuyentien.png / clmm.png!", threadId, threadType);
+      return api.sendMessage({ msg: "Không tìm thấy ảnh nền chuyentien.png / clmm.png!", ttl: 60_000 }, threadId, threadType);
     }
 
     const bgImg = await loadImage(bgPath);
@@ -204,7 +204,7 @@ export default {
     const outPath = path.join(CACHE_DIR, `clmomo_${Date.now()}.png`);
     await fs.promises.writeFile(outPath, canvas.toBuffer());
 
-    await api.sendMessage({ msg, attachments: [outPath] }, threadId, threadType);
+    await api.sendMessage({ msg, attachments: [outPath], ttl: 60_000 }, threadId, threadType);
     setTimeout(() => {
       fs.promises.unlink(outPath).catch(() => {});
     }, 30_000);

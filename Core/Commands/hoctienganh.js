@@ -1,4 +1,4 @@
-// author waguri kaori
+// author @GwenDev
 import axios from "axios";
 import fs from "fs";
 import path from "path";
@@ -9,16 +9,37 @@ import { dangKyReply } from "../../Handlers/HandleReply.js";
 import { createCanvas, loadImage } from "canvas";
 
 const CACHE = path.join("Data", "Cache", "hoctienganh");
-fs.mkdirSync(CACHE, { recursive: true });
+try { fs.mkdirSync(CACHE, { recursive: true }); } catch {}
 
 function userFile(uid){return path.join(CACHE,`${uid}.json`);} 
-function load(uid){if(fs.existsSync(userFile(uid)))return JSON.parse(fs.readFileSync(userFile(uid),"utf8"));return {last:0};}
-function save(uid,data){fs.writeFileSync(userFile(uid),JSON.stringify(data,null,2));}
+function load(uid){
+  try {
+    const f = userFile(uid);
+    if (fs.existsSync(f)) return JSON.parse(fs.readFileSync(f, "utf8"));
+  } catch {}
+  return { last: 0 };
+}
+function save(uid,data){
+  const f = userFile(uid);
+  const payload = JSON.stringify(data, null, 2);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      try { fs.mkdirSync(path.dirname(f), { recursive: true }); } catch {}
+      fs.writeFileSync(f, payload, { encoding: "utf8" });
+      return;
+    } catch (e) {
+      if (attempt === 2) throw e;
+      try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50); } catch {}
+    }
+  }
+}
+
+const ACTIVE_TEST_BY_THREAD = new Map(); // threadId -> { uid, startedAt }
 
 function geminiURL() {
-  const key = settings.geminiApiKey;
+  const key = settings.apis?.gemini?.key;
   if (!key) throw new Error("Missing GEMINI_API_KEY");
-  const model = settings.geminiModel || "gemini-2.5-flash";
+  const model = settings.apis?.gemini?.model || "gemini-2.5-flash";
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 }
 async function gemini(prompt, max_tokens = 256, temperature = 0.7) {
@@ -132,11 +153,18 @@ export default {
     const sub = (args?.[0] || "").toLowerCase();
     const user = load(uid);
 
-    // ---------- default help ----------
-    if(!sub){return api.sendMessage("📚 Học Tiếng Anh\n• hoctienganh kiemtra – Làm 24 câu\n• hoctienganh diemso – Xem điểm\n• hoctienganh top – BXH",threadId,threadType);} 
+    if(!sub){return api.sendMessage({ msg: "📚 Học Tiếng Anh\n• hoctienganh kiemtra – Làm 24 câu\n• hoctienganh diemso – Xem điểm\n• hoctienganh top – BXH", ttl: 5*60_000 },threadId,threadType);} 
 
-    // ---------- kiểm tra 24 câu ----------
     if (sub === "kiemtra") {
+      const cur = ACTIVE_TEST_BY_THREAD.get(threadId);
+      if (cur && cur.uid && cur.uid !== uid) {
+        return api.sendMessage({ msg: "Nhóm đang có người làm bài. Vui lòng chờ họ hoàn thành hoặc nộp bài.", ttl: 5*60_000 }, threadId, threadType);
+      }
+      const me = load(uid);
+      if (me?.state?.mode === "test" && Number(me.state.idx || 0) < 24) {
+        return api.sendMessage({ msg: "Bạn đang làm bài kiểm tra dở. Hãy trả lời tiếp hoặc gõ 'nopbai' để nộp.", ttl: 5*60_000 }, threadId, threadType);
+      }
+
       let questions;
       try {
         questions = await buildTestQuestions();
@@ -150,6 +178,7 @@ export default {
         correct: 0,
       };
       save(uid, { ...user, state });
+      ACTIVE_TEST_BY_THREAD.set(threadId, { uid, startedAt: Date.now() });
 
       const sendQ = async (qObj, idx) => {
      
@@ -159,13 +188,14 @@ export default {
         const profile = await getUserProfile(api, uid);
         const imgPath = await makeQuestionCard({ qObj, idx, total:24, name: profile.displayName, avatarUrl: profile.avatar });
         const caption = `❓ Câu ${idx}/24 – Trả lời A/B/C/D hoặc 'nopbai' để nộp.`;
-        const sentRes = await api.sendMessage({ msg: caption, attachments:[imgPath] }, threadId, threadType);
+        const sentRes = await api.sendMessage({ msg: caption, attachments:[imgPath], ttl: 30*60_000 }, threadId, threadType);
         const flatten = v => (Array.isArray(v)?v.flat(Infinity):[v]);
         const all = flatten(sentRes).filter(Boolean);
         const first = all[0] || {};
         const mid = first?.message?.msgId ?? first?.msgId ?? first?.attachment?.[0]?.msgId ?? null;
         const cid = first?.message?.cliMsgId ?? first?.cliMsgId ?? null;
         state.prevMsgId = mid; state.prevCliMsgId = cid;
+        try{ if (fs.existsSync(imgPath)) { await fs.promises.unlink(imgPath).catch(()=>{});} }catch{}
 
         dangKyReply({
           msgId: mid,
@@ -190,9 +220,10 @@ export default {
             const right = data.state.correct;
             const totalDone = data.state.idx;
             const percent = totalDone ? Math.round((right / totalDone) * 100) : 0;
-            await _api.sendMessage(`Bạn đã nộp bài sớm. Đúng ${right}/${totalDone} câu (${percent}%).`, threadId, threadType);
+            await _api.sendMessage({ msg: `Bạn đã nộp bài sớm. Đúng ${right}/${totalDone} câu (${percent}%).`, ttl: 5*60_000 }, threadId, threadType);
             await query(`UPDATE users SET tienganh = COALESCE(tienganh,0) + ? WHERE uid = ?`, [right, uid]);
             const d=load(uid);d.last=right;save(uid,d);
+            try { ACTIVE_TEST_BY_THREAD.delete(threadId); } catch {}
             return { clear: true };
           }
 
@@ -207,14 +238,14 @@ export default {
             
             const right = data.state.correct;
             const percent = Math.round((right / 24) * 100);
-            await api.sendMessage(
-              ` Hoàn thành! Bạn đúng ${right}/24 câu (${percent}%).`,
-              threadId,
-              threadType
-            );
+            await api.sendMessage({
+              msg: ` Hoàn thành! Bạn đúng ${right}/24 câu (${percent}%).`,
+              ttl: 5*60_000
+            }, threadId, threadType);
            
             await query(`UPDATE users SET tienganh = COALESCE(tienganh,0) + ? WHERE uid = ?`, [right, uid]);
             const d=load(uid);d.last=right;save(uid,d);
+            try { ACTIVE_TEST_BY_THREAD.delete(threadId); } catch {}
             return { clear: true };
           } else {
             save(uid, data);
@@ -232,7 +263,11 @@ export default {
     }
 
     if (sub === "batdau") {
-      const loading = await api.sendMessage("🤖 Đang tạo câu hỏi...", threadId, threadType);
+      const cur = ACTIVE_TEST_BY_THREAD.get(threadId);
+      if (cur) {
+        return api.sendMessage({ msg: "Nhóm đang có người làm bài. Không thể bắt đầu câu hỏi khác.", ttl: 5*60_000 }, threadId, threadType);
+      }
+      const loading = await api.sendMessage({ msg: "🤖 Đang tạo câu hỏi...", ttl: 5*60_000 }, threadId, threadType);
       let q;
       try {
         const prompt = `Create ONE English question for conversation.`;
@@ -241,13 +276,13 @@ export default {
         q = "What is your favorite season and why?";
       }
       await api.undo({ msgId: loading.messageID, cliMsgId: 0 }, threadId, threadType);
-      await api.sendMessage(`❓ ${q}\n👉 Trả lời bằng cách phản hồi tin nhắn này.`, threadId, threadType);
+      await api.sendMessage({ msg: `❓ ${q}\n👉 Trả lời bằng cách phản hồi tin nhắn này.`, ttl: 30*60_000 }, threadId, threadType);
       return;
     }
 
-    if(sub==="diemso"){const [row]=await query("SELECT tienganh FROM users WHERE uid=?",[uid]);const score=row?.tienganh??0;return api.sendMessage(`🎯 Điểm của bạn: ${score}/24`,threadId,threadType);} 
+    if(sub==="diemso"){const [row]=await query("SELECT tienganh FROM users WHERE uid=?",[uid]);const score=row?.tienganh??0;return api.sendMessage({ msg: `🎯 Điểm của bạn: ${score}/24`, ttl: 5*60_000 },threadId,threadType);} 
 
-    if(sub==="top"){const rows=await query("SELECT uid,name,tienganh FROM users WHERE tienganh IS NOT NULL ORDER BY tienganh DESC LIMIT 10");if(!rows.length)return api.sendMessage("Chưa có dữ liệu.",threadId,threadType);
+    if(sub==="top"){const rows=await query("SELECT uid,name,tienganh FROM users WHERE tienganh IS NOT NULL ORDER BY tienganh DESC LIMIT 10");if(!rows.length)return api.sendMessage({ msg: "Chưa có dữ liệu.", ttl: 5*60_000 },threadId,threadType);
      
       const uids=rows.map(r=>r.uid);const avatars={};try{const info=await api.getUserInfo(uids);const map=info.changed_profiles||{};rows.forEach(r=>{const k=Object.keys(map).find(x=>x.startsWith(r.uid));if(k)avatars[r.uid]=map[k].avatar;});}catch{}
       const W=700,rowH=70,headerH=100,H=headerH+rows.length*rowH+40;const canvas=createCanvas(W,H);const ctx=canvas.getContext("2d");const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#1b2735");g.addColorStop(1,"#090a0f");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -257,8 +292,8 @@ export default {
         ctx.fillStyle="#f1c40f";ctx.font="bold 28px Arial";ctx.fillText(String(rank),10,y+rowH/2+10);
         ctx.fillStyle="#ecf0f1";ctx.font="24px Arial";ctx.fillText(rows[i].name||"User",100,y+rowH/2+10);
         ctx.fillStyle="#e67e22";ctx.textAlign="right";ctx.fillText(`${rows[i].tienganh}`,W-40,y+rowH/2+10);ctx.textAlign="left";}
-      const dir=path.join("Data","Cache","EngRank");if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});const out=path.join(dir,`rank_${Date.now()}.png`);fs.writeFileSync(out,canvas.toBuffer("image/png"));await api.sendMessage({msg:"🏆 Bảng Xếp Hạng",attachments:[out]},threadId,threadType);return;}
+      const dir=path.join("Data","Cache","EngRank");if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});const out=path.join(dir,`rank_${Date.now()}.png`);fs.writeFileSync(out,canvas.toBuffer("image/png"));const sent=await api.sendMessage({msg:"🏆 Bảng Xếp Hạng",attachments:[out], ttl: 5*60_000},threadId,threadType);try{if(fs.existsSync(out))await fs.promises.unlink(out).catch(()=>{});}catch{}return;}
 
-    await api.sendMessage(" Lệnh không hợp lệ!", threadId, threadType);
+    await api.sendMessage({ msg: " Lệnh không hợp lệ!", ttl: 5*60_000 }, threadId, threadType);
   },
 };

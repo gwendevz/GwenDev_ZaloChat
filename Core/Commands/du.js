@@ -1,15 +1,43 @@
 // author @GwenDev
 import https from "https";
-import fs from "fs"; 
+import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
 
+const DATA_FILE = path.resolve("Api", "Data", "Image", "Dú.json");
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+async function downloadStream(url, outPath) {
+  await fsp.mkdir(path.dirname(outPath), { recursive: true });
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(outPath);
+    https.get(url, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        https.get(res.headers.location, (res2) => {
+          res2.pipe(file);
+          file.on("finish", () => file.close(() => resolve(outPath)));
+        }).on("error", async (err) => {
+          try { await fsp.unlink(outPath); } catch {}
+          reject(err);
+        });
+        return;
+      }
+      res.pipe(file);
+      file.on("finish", () => file.close(() => resolve(outPath)));
+    }).on("error", async (err) => {
+      try { await fsp.unlink(outPath); } catch {}
+      reject(err);
+    });
+  });
+}
+
 export default {
   name: "dú",
-  description: "Gửi ảnh dú từ API",
+  description: "Gửi ảnh dú từ data",
   role: 0,
   cooldown: 30,
-   group: "image",
+  group: "image",
   aliases: [
     "gửi ảnh dú",
     "cho xem dú",
@@ -29,58 +57,21 @@ export default {
   async run({ message, api }) {
     const threadId = message.threadId;
     const threadType = message.type;
-
     try {
-      const imageData = await new Promise((resolve, reject) => {
-        https.get("https://api.nemg.me/images/du", (res) => {
-          let data = "";
-          res.on("data", (chunk) => data += chunk);
-          res.on("end", () => {
-            try {
-              resolve(JSON.parse(data));
-            } catch (err) {
-              reject("Lỗi JSON từ API.");
-            }
-          });
-        }).on("error", reject);
-      });
-
-      const imageUrl = imageData.url;
-      if (!imageUrl) {
-        return api.sendMessage("Không lấy được ảnh từ API.", threadId, threadType);
+      const raw = await fsp.readFile(DATA_FILE, "utf-8");
+      const urls = JSON.parse(raw);
+      if (!Array.isArray(urls) || urls.length === 0) {
+        return api.sendMessage("Danh sách ảnh trống.", threadId, threadType);
       }
-
-      const cacheDir = path.resolve("Data", "Cache");
-      await fsp.mkdir(cacheDir, { recursive: true });
-
-      const fileName = `du_${Date.now()}.jpg`;
-      const filePath = path.join(cacheDir, fileName);
-
-      await new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(filePath);
-        https.get(imageUrl, (res) => {
-          res.pipe(file);
-          file.on("finish", () => file.close(resolve));
-        }).on("error", async (err) => {
-          await fsp.unlink(filePath).catch(() => {});
-          reject(err);
-        });
-      });
-
-      await api.sendMessage(
-        {
-          msg: "mê lắm hả :>?",
-          attachments: [filePath],
-                 ttl: 30000
-        },
-        threadId,
-        threadType
-      );
-
-      await fsp.unlink(filePath);
-
+      const url = pick(urls);
+      const cacheDir = path.resolve("Data", "Cache", "Du");
+      const ts = Date.now();
+      const ext = (() => { try { const u = new URL(url); return path.extname(u.pathname) || ".jpg"; } catch { return ".jpg"; } })();
+      const filePath = path.join(cacheDir, `du_${ts}${ext}`);
+      await downloadStream(url, filePath);
+      await api.sendMessage({ msg: "mê lắm hả :>?", attachments: [filePath], ttl: 30000 }, threadId, threadType);
+      try { if (fs.existsSync(filePath)) await fsp.unlink(filePath).catch(() => {}); } catch {}
     } catch (err) {
-      console.error("[IMAGE_COMMAND] Lỗi gửi ảnh dú:", err);
       await api.sendMessage("Đã xảy ra lỗi khi gửi ảnh dú.", threadId, threadType);
     }
   }

@@ -22,7 +22,7 @@ export default {
     const threadType = message.type;
 
     try {
-      const filePath = path.resolve("Api", "Data", "VideoCosplay.json");
+      const filePath = path.resolve("Api", "Data","Video", "VideoCosplay.json");
       const rawData = await fs.readFile(filePath, "utf-8");
       const videoList = JSON.parse(rawData);
 

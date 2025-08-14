@@ -1,10 +1,9 @@
-// Unified Caro API: prompts, Gemini helpers, and learning/storage
+// author @GwenDev
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
 import { settings } from "../../App/Settings.js";
 
-// ===== Prompts (from CaroPrompt.js) =====
 const BASE_HEADER = `
 QUY TẮC XUẤT RA BẮT BUỘC:
 - Chỉ trả về MỘT số nguyên duy nhất ứng với ô cần đánh (1..S*S).
@@ -146,7 +145,6 @@ export function buildSystemPrompt(mode = 1) {
   return caroPrompts[mode] || caroPrompts[4];
 }
 
-// ===== Gemini helpers (from GeminiCore.js) =====
 function toGeminiContents(messages) {
   return (messages || []).map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
@@ -155,9 +153,9 @@ function toGeminiContents(messages) {
 }
 
 async function chatGemini(messages, systemPrompt) {
-  const apiKey = settings.geminiApiKey;
-  const model = settings.geminiModel || "gemini-2.5-flash";
-  if (!apiKey) throw new Error("Missing settings.geminiApiKey (set in App/Settings.js or env GEMINI_API_KEY)");
+  const apiKey = settings.apis?.gemini?.key;
+  const model = settings.apis?.gemini?.model || "gemini-2.5-flash";
+  if (!apiKey) throw new Error("Missing Gemini API key (set in App/Settings.js or env GEMINI_API_KEY)");
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = {
     contents: toGeminiContents(messages),
@@ -214,7 +212,6 @@ export async function suggestMove({ board, size, need, myMark, mode = 4, timeout
   return Number.isInteger(pos) ? pos : -1;
 }
 
-// ===== Learning & logs (from CaroLearn.js) =====
 const DATA_DIR = path.resolve("Data", "Caro");
 const LEARN_FILE = path.join(DATA_DIR, "learn.json");
 const LOG_DIR = path.join(DATA_DIR, "Logs");
@@ -276,7 +273,6 @@ export async function learnFromOutcome({ mode, result }) {
       ? JSON.parse(fs.readFileSync(LEARN_FILE, "utf-8"))
       : defaultConfig();
     const m = raw.modes?.[mode] || {};
-    // Simple heuristic updates
     if (result === "bot_lose") {
       m.centerWeight = Math.min(3.0, (m.centerWeight || 1.5) + 0.1);
       m.vcfDepth = Math.min(6, (m.vcfDepth || 3) + 1);

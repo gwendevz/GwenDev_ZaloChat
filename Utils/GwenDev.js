@@ -123,7 +123,6 @@ export function muxImageAndAudioToVideo(imagePath, audioPath, outputPath) {
     });
 }
 
-// Create a visual card for SoundCloud track info
 export async function createSoundCloudCanvas({
     title = "",
     artist = "",
@@ -135,13 +134,11 @@ export async function createSoundCloudCanvas({
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-  // Background
 const grad = ctx.createLinearGradient(0, 0, width, height);
 grad.addColorStop(0, "#ee9ca7");  // hồng 1
 grad.addColorStop(1, "#ffdde1");  // hồng 2
 ctx.fillStyle = grad;
 ctx.fillRect(0, 0, width, height);
-    // Load and draw thumbnail as left poster with rounded corners
     let thumbImg = null;
     try {
         if (thumbnailUrl) {
@@ -167,12 +164,10 @@ ctx.fillRect(0, 0, width, height);
         ctx.drawImage(thumbImg, posterX, posterY, posterW, posterH);
         ctx.restore();
     } else {
-        // placeholder if no thumbnail
         ctx.fillStyle = "rgba(0,0,0,0.15)";
         ctx.fillRect(posterX, posterY, posterW, posterH);
     }
 
-    // Info panel
     const panelX = posterX + posterW + 24;
     const panelY = 24;
     const panelW = width - panelX - 24;
@@ -188,7 +183,6 @@ ctx.fillRect(0, 0, width, height);
     ctx.closePath();
     ctx.fill();
 
-    // Title, artist, quality
     const safeTitle = String(title || "").slice(0, 120);
     const safeArtist = String(artist || "Unknown");
     const safeQuality = String(quality || "");
@@ -206,7 +200,6 @@ ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#f8f8f8";
     ctx.fillText(`Quality: ${safeQuality || 'n/a'}`, panelX + 24, panelY + 24 + 40 * 2 + 16 + 34);
 
-    // Footer label
     ctx.font = "bold 18px Arial";
     ctx.fillStyle = "#ffffff";
     ctx.fillText("AutoDown • SoundCloud", panelX + 24, panelY + panelH - 28);
@@ -232,7 +225,6 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
             line = words[n];
             lineCount++;
             if (lineCount >= maxLines - 1) {
-                // last line with ellipsis
                 let remaining = words.slice(n).join(" ");
                 while (ctx.measureText(remaining + "…").width > maxWidth && remaining.length > 0) {
                     remaining = remaining.slice(0, -1);
@@ -247,7 +239,6 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
     ctx.fillText(line, x, y);
 }
 
-// Create a composite canvas listing multiple SoundCloud search results
 export async function createSoundCloudResultsCanvas(items = [], header = "SoundCloud Search") {
     const safeItems = Array.isArray(items) ? items.slice(0, 8) : [];
     const width = 1024;             // fixed width
@@ -263,21 +254,18 @@ export async function createSoundCloudResultsCanvas(items = [], header = "SoundC
     const canvas = createCanvas(width, Math.max(height, headerH + margin * 2));
     const ctx = canvas.getContext("2d");
 
-    // Background: pink gradient (original style)
     const grad = ctx.createLinearGradient(0, 0, width, height);
     grad.addColorStop(0, "#ee9ca7");
     grad.addColorStop(1, "#ffdde1");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
-    // Header container
     const hdrX = margin;
     const hdrY = margin;
     const hdrW = width - margin * 2;
     const hdrH = headerH;
     roundedFill(ctx, hdrX, hdrY, hdrW, hdrH, 20, "rgba(0,0,0,0.25)");
 
-    // Header text
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 32px Arial";
     const headerMax = hdrW - 32;
@@ -286,24 +274,19 @@ export async function createSoundCloudResultsCanvas(items = [], header = "SoundC
     ctx.fillStyle = "#f2f2f2";
     ctx.fillText(`Top ${safeItems.length} kết quả`, hdrX + 16, hdrY + hdrH - 26);
 
-    // Rows list area origin
     let y = hdrY + hdrH + 30; // lowered more below header
     for (let i = 0; i < safeItems.length; i++) {
         const it = safeItems[i] || {};
         const rowX = margin;
         const rowW = width - margin * 2;
 
-        // Row card
-        // subtle shadow to lift card a bit
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.15)";
         ctx.shadowBlur = 8;
         roundedFill(ctx, rowX, y, rowW, rowH, 18, "rgba(0,0,0,0.25)");
         ctx.restore();
-        // thin border for crisp edge
         roundedStroke(ctx, rowX, y, rowW, rowH, 18, "rgba(255,255,255,0.08)", 1);
 
-        // Index column
         const idxCenterX = rowX + 28;
         const idxCenterY = y + rowH / 2 ;
         filledCircle(ctx, idxCenterX, idxCenterY, 13, "rgba(255,255,255,0.18)");
@@ -313,7 +296,6 @@ export async function createSoundCloudResultsCanvas(items = [], header = "SoundC
         const tW = ctx.measureText(num).width;
         ctx.fillText(num, idxCenterX - tW / 2, idxCenterY + 6);
 
-        // Thumbnail (rounded)
         const thumbX = rowX + idxColW + innerPad;
         const thumbY = y + (rowH - thumbSize) / 2;
         roundedFill(ctx, thumbX, thumbY, thumbSize, thumbSize, 12, "rgba(255,255,255,0.16)");
@@ -327,7 +309,6 @@ export async function createSoundCloudResultsCanvas(items = [], header = "SoundC
             }
         } catch {}
 
-        // Text block
         const txtX = thumbX + thumbSize + innerPad;
         const txtW = rowX + rowW - innerPad - txtX; // ensures no overflow
         const title = String(it.title || "(no title)");

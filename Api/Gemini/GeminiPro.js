@@ -1,4 +1,4 @@
-// author @GwenDev 
+// author @GwenDev
 import fetch from "node-fetch";
 import { settings } from "../../App/Settings.js";
 import { dangKyReply } from "../../Handlers/HandleReply.js";
@@ -7,6 +7,13 @@ import cosplayCommand from "../../Core/Commands/cosplay.js";
 import videoGirlCommand from "../../Core/Commands/videogirl.js";
 import kickCommand from "../../Core/Commands/kick.js";
 import infoCommand from "../../Core/Commands/info.js";
+import duCommand from "../../Core/Commands/du.js";
+import mongCommand from "../../Core/Commands/mong.js";
+import nudeCommand from "../../Core/Commands/nude.js";
+import umaruimgCommand from "../../Core/Commands/umaruimg.js";
+import insimgCommand from "../../Core/Commands/insimg.js";
+import loliimgCommand from "../../Core/Commands/loliimg.js";
+import cosimgCommand from "../../Core/Commands/cosimg.js";
 import { handleCommands as runCommandHandler } from "../../Handlers/HandleCommands.js";
 import { role as getUserRole } from "../../Database/Admin.js";
 
@@ -19,7 +26,18 @@ Video: nếu người dùng muốn xem video cosplay hoặc gái xinh, hãy tr�
 Kick: nếu được yêu cầu "kick" và có tag thành viên, hãy trả lời duyên dáng rồi thực thi lệnh kick (chỉ khi người yêu cầu có quyền, không tiết lộ quy trình).
 Info: nếu người dùng yêu cầu xem thông tin ("info", "thông tin"...) về chính họ hoặc về người được tag, hãy trả lời duyên dáng rồi tự động gửi thông tin.
 Help: nếu người dùng hỏi về danh sách lệnh, hãy trả lời duyên dáng rồi ngầm gửi danh sách lệnh.
-Giới hạn: tránh nội dung nhạy cảm/toxic, từ chối khéo và chuyển hướng tích cực.`;
+Giới hạn: tránh nội dung nhạy cảm/toxic, từ chối khéo và chuyển hướng tích cực.
+
+Hình ảnh: khi người dùng xin ảnh “dú”, “mông”, “nude” (18+), hoặc các bộ sưu tập “umaru”, “instagram”, “loli” (SFW), “cos” (ảnh cosplay) – hãy trả lời duyên dáng, ngắn gọn và NGẦM gửi 1 ảnh phù hợp (không yêu cầu họ gõ lệnh, không tiết lộ quy trình nội bộ).
+- Phân biệt “video/clip” (→ cosplay/gái xinh video) với “ảnh/hình/pic” (→ ảnh).
+- Quy tắc an toàn:
+  - Chỉ thực hiện yêu cầu 18+ (dú, mông, nude) nếu bối cảnh cho phép nội dung người lớn. Nếu không, từ chối khéo và gợi ý nội dung SFW thay thế.
+  - “loli” luôn SFW (dễ thương/anime, KHÔNG tình dục, KHÔNG khiêu dâm, KHÔNG liên quan người chưa thành niên).
+- Trả lời mẫu ngắn gọn (ví dụ):
+  - “Để Gwen gửi liền nè ✨”
+  - “Gwen chọn ngẫu nhiên giúp bạn nha~”
+  - “Có ngay đây, xem thêm cứ gọi Gwen nhé!”
+- Nếu người dùng xin nhiều ảnh, vẫn ưu tiên gửi 1 ảnh/lượt (giữ lịch sự, tránh spam).`;
 
 const convByThread = new Map();
 
@@ -59,9 +77,9 @@ function toGeminiContents(messages) {
 }
 
 async function chatGemini(messages, systemPrompt) {
-  const apiKey = settings.geminiApiKey;
-  const model = settings.geminiModel || "gemini-2.5-flash";
-  if (!apiKey) throw new Error("Missing settings.geminiApiKey (set in App/Settings.js or env GEMINI_API_KEY)");
+  const apiKey = settings.apis?.gemini?.key;
+  const model = settings.apis?.gemini?.model || "gemini-2.5-flash";
+  if (!apiKey) throw new Error("Missing Gemini API key (set in App/Settings.js or env GEMINI_API_KEY)");
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = {
     contents: toGeminiContents(messages),
@@ -96,6 +114,43 @@ function isCosplayIntent(text) {
 function isVideoGirlIntent(text) {
   const t = normalizeVN(text);
   return /(gai xinh|gaixinh|gai xin|video gai|video gai xinh)/i.test(t);
+}
+
+function isDuIntent(text) {
+  const t = normalizeVN(text);
+  return /(\bdu\b|cho xem du|gui du|anh du)/i.test(t);
+}
+
+function isMongIntent(text) {
+  const t = normalizeVN(text);
+  return /(\bmong\b|cho xem mong|gui mong|anh mong)/i.test(t);
+}
+
+function isNudeIntent(text) {
+  const t = normalizeVN(text);
+  return /(\bnude\b|cho xem nude|gui nude|anh nude)/i.test(t);
+}
+
+function isUmaruIntent(text) {
+  const t = normalizeVN(text);
+  return /(\bumaru\b|umaruimg)/i.test(t);
+}
+
+function isInstagramIntent(text) {
+  const t = normalizeVN(text);
+  return /(\binstagram\b|\binsta\b|insimg)/i.test(t);
+}
+
+function isLoliIntent(text) {
+  const t = normalizeVN(text);
+  return /(\bloli\b|loliimg)/i.test(t);
+}
+
+function isCosImageIntent(text) {
+  const t = normalizeVN(text);
+  const mentionsCos = /(\bcosplay\b|\bcos\b)/i.test(t);
+  const mentionsVideo = /(\bvideo\b|\bclip\b)/i.test(t);
+  return mentionsCos && !mentionsVideo;
 }
 
 function isKickIntent(text) {
@@ -170,6 +225,13 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
   const music = isMusicIntent(prompt);
   const cosplay = isCosplayIntent(prompt);
   const videoGirl = isVideoGirlIntent(prompt);
+  const duIntent = isDuIntent(prompt);
+  const mongIntent = isMongIntent(prompt);
+  const nudeIntent = isNudeIntent(prompt);
+  const umaruIntent = isUmaruIntent(prompt);
+  const instagramIntent = isInstagramIntent(prompt);
+  const loliIntent = isLoliIntent(prompt);
+  const cosImageIntent = isCosImageIntent(prompt);
   const kickIntent = isKickIntent(prompt);
   const infoIntent = isInfoIntent(prompt);
   const helpIntent = isHelpIntent(prompt);
@@ -228,6 +290,41 @@ export async function askGwenAndReply({ api, threadId, threadType, prompt, uid, 
     try {
       const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
       await videoGirlCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (duIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await duCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (mongIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await mongCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (nudeIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await nudeCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (umaruIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await umaruimgCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (instagramIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await insimgCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (loliIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await loliimgCommand.run({ message: fakeMessage, api });
+    } catch (e) {}
+  } else if (cosImageIntent) {
+    try {
+      const fakeMessage = { threadId, type: threadType, data: { uidFrom: uid } };
+      await cosimgCommand.run({ message: fakeMessage, api });
     } catch (e) {}
   } else if (kickIntent && message?.data?.mentions?.length) {
     try {

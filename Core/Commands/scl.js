@@ -118,20 +118,20 @@ const exportDefault = {
     if (content.startsWith("audio")) {
       const num = parseInt(args?.[0] || "", 10);
       if (!num || Number.isNaN(num)) {
-        return api.sendMessage("Vui lòng nhập: audio <số thứ tự>", threadId, threadType);
+        return api.sendMessage({ msg: "Vui lòng nhập: audio <số thứ tự>", ttl: 2*60_000 }, threadId, threadType);
       }
 
       const pending = pendingSearchByThread.get(threadId);
       if (!pending || !Array.isArray(pending.items) || pending.items.length === 0) {
-        return api.sendMessage("Không có danh sách chờ. Hãy tìm trước bằng .scl <từ khóa>.", threadId, threadType);
+        return api.sendMessage({ msg: "Không có danh sách chờ. Hãy tìm trước bằng .scl <từ khóa>.", ttl: 2*60_000 }, threadId, threadType);
       }
 
       if (pending.authorId && pending.authorId !== uid) {
-        return api.sendMessage("Danh sách này thuộc người khác vừa tìm. Hãy tự tìm bằng .scl <từ khóa>.", threadId, threadType);
+        return api.sendMessage({ msg: "Danh sách này thuộc người khác vừa tìm. Hãy tự tìm bằng .scl <từ khóa>.", ttl: 2*60_000 }, threadId, threadType);
       }
 
       if (num < 1 || num > pending.items.length) {
-        return api.sendMessage("Lựa chọn không hợp lệ trong danh sách.", threadId, threadType);
+        return api.sendMessage({ msg: "Lựa chọn không hợp lệ trong danh sách.", ttl: 2*60_000 }, threadId, threadType);
       }
 
       const chosen = pending.items[num - 1];
@@ -145,11 +145,7 @@ const exportDefault = {
         let infoMsg = null;
         if (silentAuto) {
           try {
-            infoMsg = await api.sendMessage(
-              `${chosen.title}\n🔊 Chất lượng: ${quality || "n/a"}`,
-              threadId,
-              threadType
-            );
+            infoMsg = await api.sendMessage({ msg: `${chosen.title}\n🔊 Chất lượng: ${quality || "n/a"}`, ttl: 2*60_000 }, threadId, threadType);
           } catch {}
         }
 
@@ -182,14 +178,13 @@ const exportDefault = {
 
         const caption = `【 SOUNDLOUD 】\n🎵 ${chosen.title}\n👤 ${chosen.artist || "Unknown"}\n🔊 ${quality || "n/a"}`;
         if (cardPath) {
-          await api.sendMessage({ msg: caption, attachments: [cardPath], ttl: 600_000 }, threadId, threadType);
+          await api.sendMessage({ msg: caption, attachments: [cardPath], ttl: 12*60*60_000 }, threadId, threadType);
         } else {
-          await api.sendMessage(caption, threadId, threadType);
+          await api.sendMessage({ msg: caption, ttl: 12*60*60_000 }, threadId, threadType);
         }
 
-        await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
+        await api.sendVoice({ voiceUrl, ttl: 12*60*60_000 }, threadId, threadType);
 
-        // Thả reaction OK khi gửi voice thành công
         try {
           await api.addReaction(
             Reactions.OK,
@@ -243,13 +238,13 @@ const exportDefault = {
 
     const query = (args || []).join(" ").trim();
     if (!query) {
-      return api.sendMessage("Phần tìm kiếm không được để trống!", threadId, threadType);
+      return api.sendMessage({ msg: "Phần tìm kiếm không được để trống!", ttl: 2*60_000 }, threadId, threadType);
     }
 
     try {
       const items = await searchSoundCloud(query);
       if (!items || items.length === 0) {
-        return api.sendMessage(`Không có kết quả cho "${query}"`, threadId, threadType);
+        return api.sendMessage({ msg: `Không có kết quả cho "${query}"`, ttl: 2*60_000 }, threadId, threadType);
       }
 
       const top = items.slice(0, 5);
@@ -273,14 +268,15 @@ const exportDefault = {
         try {
           const canvasPath = await createSoundCloudResultsCanvas(top, `Kết quả: ${query}`);
           const listMessage = `👉 Gõ: audio <số> để gửi voice (vd: audio 1)`;
-          res = await api.sendMessage({ msg: listMessage, attachments: [canvasPath] }, threadId, threadType);
+          res = await api.sendMessage({ msg: listMessage, attachments: [canvasPath], ttl: 5*60_000 }, threadId, threadType);
           listMsgId = res?.message?.msgId ?? res?.msgId ?? null;
           listCliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? 0;
+          try { if (canvasPath && fs.existsSync(canvasPath)) fs.unlinkSync(canvasPath); } catch {}
         } catch (e) {
          
           const lines = top.map((it, i) => `\n${i + 1}. 👤 ${it.artist || "Unknown"}\n📜 ${it.title}\n⏳ ${it.timestamp || "?"}`);
           const listMessage = `【🔎】Kết quả: ${query}${lines.join("\n")}\n\n👉 Gõ: audio <số> để gửi voice (vd: audio 1)`;
-          res = await api.sendMessage(listMessage, threadId, threadType);
+          res = await api.sendMessage({ msg: listMessage, ttl: 5*60_000 }, threadId, threadType);
           listMsgId = res?.message?.msgId ?? res?.msgId ?? null;
           listCliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? 0;
         }

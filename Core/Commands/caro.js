@@ -1,3 +1,4 @@
+// author @GwenDev
 import fs from "fs";
 import path from "path";
 import axios from "axios";
@@ -691,7 +692,6 @@ async function botChooseMove(game) {
       if (score > localScore) { localScore = score; localBest = idx; }
     }
     if (localScore > bestScore) { bestScore = localScore; bestMove = localBest; }
-    // history heuristic bump for principal move
     if (Number.isInteger(localBest) && localBest >= 0) {
       game.ai.history[localBest] = (game.ai.history[localBest] || 0) + depth * depth;
     }
@@ -757,7 +757,7 @@ function sendBoardAndRegister(game, api, header = "") {
   const mArr = turn.uid && !isBotUid(turn.uid)
     ? [{ pos: txt.lastIndexOf(turnTag), len: turnTag.length, uid: turn.uid }]
     : [];
-  const payload = img ? { msg: txt, attachments: [img], mentions: mArr } : { msg: txt, mentions: mArr };
+  const payload = img ? { msg: txt, attachments: [img], mentions: mArr, ttl: 60_000 } : { msg: txt, mentions: mArr, ttl: 60_000 };
   return api
     .sendMessage(
       payload,
@@ -931,14 +931,12 @@ export default {
       threadType = message.type ?? ThreadType.User,
       uid = message.data?.uidFrom;
     
-    // Kiểm tra user có tồn tại trong database không
     const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
     if (!userExists) {
       return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);
     }
     
     const sub = (args[0] || "").toLowerCase();
-    // CREATE
     if (sub === "create") {
       if (activeGames.has(threadId))
         return api.sendMessage(
@@ -996,7 +994,6 @@ export default {
       });
       return;
     }
-    // JOIN
     if (sub === "join") {
       const game = activeGames.get(threadId);
       if (!game)
@@ -1019,7 +1016,6 @@ export default {
       await startGame(game, api);
       return;
     }
-    // LEAVE
     if (sub === "leave") {
       const game = activeGames.get(threadId);
       if (!game)
@@ -1056,7 +1052,6 @@ export default {
         return;
       }
     }
-    // RANK
     if (sub === "rank") {
       try {
         const rows = await query(
@@ -1135,7 +1130,7 @@ export default {
         const file = path.join(dir, `rank_${Date.now()}.png`);
         fs.writeFileSync(file, canvas.toBuffer("image/png"));
         const result = await api.sendMessage(
-          { msg: "🏆 Bảng Xếp Hạng Caro", attachments: [file] },
+          { msg: "🏆 Bảng Xếp Hạng Caro", attachments: [file], ttl: 60_000 },
           threadId,
           threadType,
         );
@@ -1176,7 +1171,7 @@ export default {
         return api.sendMessage(text, threadId, threadType);
       }
       const result = await api.sendMessage(
-        { msg: `Preview ${sz}x${sz}`, attachments: [img] },
+        { msg: `Preview ${sz}x${sz}`, attachments: [img], ttl: 60_000 },
         threadId,
         threadType,
       );
@@ -1334,7 +1329,6 @@ export default {
       });
       return;
     }
-    // HELP
     return api.sendMessage(
       [
         "🎮 Trò Chơi: Caro",

@@ -200,7 +200,6 @@ export default {
         type
       );
       
-      // Nếu tỉ lệ > 50, thử gửi giấy kết hôn
       if (compatibility > 50) {
         if (fs.existsSync(weddingPath)) {
           try {
@@ -215,7 +214,6 @@ export default {
             );
             await fsp.unlink(filledWeddingPath).catch(() => {});
           } catch (err) {
-            // Nếu không gửi được giấy kết hôn, gửi câu khác
             console.log("[GHEPDOI_COMMAND] Không gửi được giấy kết hôn, gửi câu khác:", err?.message || err);
             await api.sendMessage(
               `🎉 Chúc mừng! ${name1} và ${name2} có tỉ lệ tình duyên cao (${compatibility}%)! Có thể sẽ có kết quả tốt đẹp trong tương lai! 💕`,
@@ -224,7 +222,6 @@ export default {
             );
           }
         } else {
-          // Nếu không có template giấy kết hôn, gửi câu khác
           await api.sendMessage(
             `🎉 Chúc mừng! ${name1} và ${name2} có tỉ lệ tình duyên cao (${compatibility}%)! Có thể sẽ có kết quả tốt đẹp trong tương lai! 💕`,
             threadId,
@@ -232,7 +229,6 @@ export default {
           );
         }
       } else {
-        // Nếu tỉ lệ thấp, gửi câu động viên
         await api.sendMessage(
           `💔 ${name1} và ${name2} có tỉ lệ tình duyên thấp (${compatibility}%). Nhưng đừng buồn, tình yêu đích thực không phụ thuộc vào con số! Hãy cố gắng và tin tưởng vào tình cảm của mình! 💪❤️`,
           threadId,

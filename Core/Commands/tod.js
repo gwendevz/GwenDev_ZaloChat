@@ -83,18 +83,18 @@ export default {
     const { threadId, senderId, type: threadType } = message;
     
     if (args.length > 0) {
-      return api.sendMessage("Lệnh này không cần tham số. Hãy sử dụng lệnh không có tham số để bắt đầu chơi.", threadId, threadType);
+      return api.sendMessage({ msg: "Lệnh này không cần tham số. Hãy sử dụng lệnh không có tham số để bắt đầu chơi.", ttl: 12*60*60_000 }, threadId, threadType);
     }
 
     try {
-      const sentMsg = await api.sendMessage(`🎮 TRUTH OR DARE 🎮\n\nReply tin nhắn này và chọn:\n\n1️⃣ Thách 🐥\n2️⃣ Thật 🐰\n\n⚠️ Có chơi có chịu - Cấm bùm kèo!`, threadId, threadType);
+      const sentMsg = await api.sendMessage({ msg: `🎮 TRUTH OR DARE 🎮\n\nReply tin nhắn này và chọn:\n\n1️⃣ Thách 🐥\n2️⃣ Thật 🐰\n\n⚠️ Có chơi có chịu - Cấm bùm kèo!`, ttl: 12*60*60_000 }, threadId, threadType);
       
      
       const msgId = sentMsg?.message?.msgId ?? sentMsg?.msgId ?? null;
       const cliMsgId = sentMsg?.message?.cliMsgId ?? sentMsg?.cliMsgId ?? null;
       
       if (!msgId) {
-       return api.sendMessage(" Có lỗi xảy ra khi khởi tạo trò chơi!", threadId, threadType);
+       return api.sendMessage({ msg: " Có lỗi xảy ra khi khởi tạo trò chơi!", ttl: 12*60*60_000 }, threadId, threadType);
       }
       
       dangKyReply({

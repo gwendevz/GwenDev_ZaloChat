@@ -53,7 +53,14 @@ export async function updatesql() {
       log("[DB] add 'tienganh' vào bảng users.", "db");
     }
 
-    
+    // xóa cột player (không cần nữa)
+    if (userCols.includes('player')) {
+      await query(`ALTER TABLE users DROP COLUMN player`);
+      log("[DB] drop 'player' khỏi bảng users.", "db");
+    }
+
+    // tạo bảng pokemon nếu chưa tồn tại
+   
    const groupCols = await query(`
   SELECT COLUMN_NAME 
   FROM INFORMATION_SCHEMA.COLUMNS 

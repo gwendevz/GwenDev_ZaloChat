@@ -13,8 +13,8 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const inputJsonPath = path.join(__dirname, "Api", "Data", "RawVideoUrls.json");
-const outputJsonPath = path.join(__dirname, "Api", "Data", "VideoCosplay.json");
+const inputJsonPath = path.join(__dirname, "Api", "Data", "Raw.json");
+const outputJsonPath = path.join(__dirname, "Api", "Data","Video", "VideoCosplay.json");
 const cacheDir = path.join(__dirname, "Temp", "Videos");
 const thumbDir = path.join(__dirname, "Temp", "Thumbs");
 

@@ -24,7 +24,8 @@ export default {
       if (!targetId) {
         return api.sendMessage({
           msg: "Không thể xác định người dùng.",
-          quoteId: message.data?.msgId
+          quoteId: message.data?.msgId,
+          ttl: 12*60*60_000
         }, message.threadId, message.type);
       }
 
@@ -34,7 +35,8 @@ export default {
       if (!info) {
         return api.sendMessage({
           msg: "Không tìm thấy thông tin người dùng.",
-          quoteId: message.data?.msgId
+          quoteId: message.data?.msgId,
+          ttl: 12*60*60_000
         }, message.threadId, message.type);
       }
 
@@ -53,12 +55,13 @@ export default {
 
       return api.sendMessage({
         msg: lines.join("\n"),
-        quoteId: message.data?.msgId
+        quoteId: message.data?.msgId,
+        ttl: 12*60*60_000
       }, message.threadId, message.type);
 
     } catch (err) {
       console.error("[INFO_COMMAND] Lỗi:", err);
-      return api.sendMessage("Đã xảy ra lỗi khi lấy thông tin người dùng.", message.threadId, message.type);
+      return api.sendMessage({ msg: "Đã xảy ra lỗi khi lấy thông tin người dùng.", ttl: 12*60*60_000 }, message.threadId, message.type);
     }
   }
 };

@@ -1,3 +1,4 @@
+// author @GwenDev
 import fs from "fs";
 import axios from "axios";
 import path from "path";
@@ -9,10 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const commandsDir = __dirname; 
 
-/**
- * Upload a local file to dpaste and return both the normal & raw link
- * @param {string} filePath full path to file
- */
+
 async function uploadToDpaste(filePath) {
   const content = await fs.promises.readFile(filePath, "utf8");
   const payload = new URLSearchParams({
@@ -21,9 +19,9 @@ async function uploadToDpaste(filePath) {
     title: path.basename(filePath),
     expiry_days: "365",
   });
-  const { data } = await axios.post(settings.dpasteApi, payload, {
+  const { data } = await axios.post(settings.apis?.dpaste?.baseUrl, payload, {
     headers: {
-      Authorization: `Bearer ${settings.dpasteToken}`,
+      Authorization: `Bearer ${settings.apis?.dpaste?.token}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     responseType: "text",
@@ -33,13 +31,8 @@ async function uploadToDpaste(filePath) {
   return { link, rawLink };
 }
 
-/**
- * Download raw code from mbox, buildtool or google drive link
- * @param {string} url
- * @returns {Promise<string>} code content
- */
+
 async function fetchCodeFromUrl(url) {
-  // Google drive special handling
   if (url.includes("drive.google")) {
     const idMatch = url.match(/[-\w]{25,}/);
     if (!idMatch) throw new Error("Không lấy được ID tệp Google Drive");
@@ -48,7 +41,6 @@ async function fetchCodeFromUrl(url) {
     return res.data.toString();
   }
 
-  // buildtool or tinyurl (code html)
   if (url.includes("buildtool") || url.includes("tinyurl.com")) {
     const { data: html } = await axios.get(url, { responseType: "text" });
     const $ = cheerioLoad(html);
@@ -57,7 +49,6 @@ async function fetchCodeFromUrl(url) {
     return codeBlock.text();
   }
 
-  // Default: treat as raw link
   const { data } = await axios.get(url, { responseType: "text" });
   return data;
 }
@@ -87,7 +78,6 @@ export default {
       ""
     ).trim();
 
-    // -------------------- Upload local file to dpaste --------------------
     if (!linkText) {
       try {
         const filePath = path.join(commandsDir, `${fileName}.js`);
@@ -102,7 +92,6 @@ export default {
       }
     }
 
-    // -------------------- Fetch code from link and save --------------------
     const urlMatch = linkText.match(/https?:\/\/[\w\-._~:/?#[\]@!$&'()*+,;=%]+/i);
     if (!urlMatch) {
       return api.sendMessage("❎ Không tìm thấy link hợp lệ trong tin nhắn reply.", threadId, type);

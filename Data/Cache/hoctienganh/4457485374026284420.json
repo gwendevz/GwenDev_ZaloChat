@@ -1,0 +1,202 @@
+{
+  "last": 0,
+  "state": {
+    "mode": "test",
+    "list": [
+      {
+        "q": "Who was the first man on the Moon?",
+        "a": "Yuri Gagarin",
+        "b": "Neil Armstrong",
+        "c": "Buzz Aldrin",
+        "d": "Michael Collins",
+        "ans": "B"
+      },
+      {
+        "q": "What color do you get by mixing red and blue?",
+        "a": "Green",
+        "b": "Purple",
+        "c": "Orange",
+        "d": "Brown",
+        "ans": "B"
+      },
+      {
+        "q": "How many days are there in a leap year?",
+        "a": "365",
+        "b": "366",
+        "c": "364",
+        "d": "367",
+        "ans": "B"
+      },
+      {
+        "q": "What is 9 × 9?",
+        "a": "81",
+        "b": "72",
+        "c": "99",
+        "d": "90",
+        "ans": "A"
+      },
+      {
+        "q": "What is the past tense of 'eat'?",
+        "a": "ate",
+        "b": "eated",
+        "c": "eat",
+        "d": "eats",
+        "ans": "A"
+      },
+      {
+        "q": "The opposite of 'young' is?",
+        "a": "new",
+        "b": "old",
+        "c": "ancient",
+        "d": "aged",
+        "ans": "B"
+      },
+      {
+        "q": "What is the opposite of 'happy'?",
+        "a": "sad",
+        "b": "angry",
+        "c": "upset",
+        "d": "mad",
+        "ans": "A"
+      },
+      {
+        "q": "Who wrote 'Romeo and Juliet'?",
+        "a": "Charles Dickens",
+        "b": "Mark Twain",
+        "c": "William Shakespeare",
+        "d": "Jane Austen",
+        "ans": "C"
+      },
+      {
+        "q": "Choose the correct article: ___ apple",
+        "a": "a",
+        "b": "an",
+        "c": "the",
+        "d": "no article",
+        "ans": "B"
+      },
+      {
+        "q": "Which is heavier: 1kg of iron or 1kg of cotton?",
+        "a": "Iron",
+        "b": "Cotton",
+        "c": "Same",
+        "d": "None",
+        "ans": "C"
+      },
+      {
+        "q": "Which shape has 3 sides?",
+        "a": "Square",
+        "b": "Triangle",
+        "c": "Rectangle",
+        "d": "Circle",
+        "ans": "B"
+      },
+      {
+        "q": "How many legs does a spider have?",
+        "a": "6",
+        "b": "8",
+        "c": "10",
+        "d": "12",
+        "ans": "B"
+      },
+      {
+        "q": "Which instrument has keys, pedals, and strings?",
+        "a": "Piano",
+        "b": "Guitar",
+        "c": "Drums",
+        "d": "Violin",
+        "ans": "A"
+      },
+      {
+        "q": "What is the main gas in Earth's atmosphere?",
+        "a": "Oxygen",
+        "b": "Nitrogen",
+        "c": "Carbon Dioxide",
+        "d": "Helium",
+        "ans": "B"
+      },
+      {
+        "q": "Which is the fastest land animal?",
+        "a": "Cheetah",
+        "b": "Tiger",
+        "c": "Horse",
+        "d": "Leopard",
+        "ans": "A"
+      },
+      {
+        "q": "What is the capital of the United States?",
+        "a": "New York",
+        "b": "Washington D.C.",
+        "c": "Los Angeles",
+        "d": "Chicago",
+        "ans": "B"
+      },
+      {
+        "q": "Which fruit has seeds on the outside?",
+        "a": "Strawberry",
+        "b": "Apple",
+        "c": "Grape",
+        "d": "Orange",
+        "ans": "A"
+      },
+      {
+        "q": "What is the plural of 'child'?",
+        "a": "childs",
+        "b": "childes",
+        "c": "children",
+        "d": "childrens",
+        "ans": "C"
+      },
+      {
+        "q": "The tallest mountain in the world is?",
+        "a": "K2",
+        "b": "Mount Everest",
+        "c": "Kangchenjunga",
+        "d": "Makalu",
+        "ans": "B"
+      },
+      {
+        "q": "Which gas do plants absorb for photosynthesis?",
+        "a": "Oxygen",
+        "b": "Carbon Dioxide",
+        "c": "Nitrogen",
+        "d": "Hydrogen",
+        "ans": "B"
+      },
+      {
+        "q": "Which gas do humans breathe in to survive?",
+        "a": "Carbon Dioxide",
+        "b": "Oxygen",
+        "c": "Nitrogen",
+        "d": "Helium",
+        "ans": "B"
+      },
+      {
+        "q": "The Great Pyramid of Giza is in which country?",
+        "a": "Iraq",
+        "b": "Egypt",
+        "c": "Iran",
+        "d": "Sudan",
+        "ans": "B"
+      },
+      {
+        "q": "How many planets are in our solar system?",
+        "a": "7",
+        "b": "8",
+        "c": "9",
+        "d": "10",
+        "ans": "B"
+      },
+      {
+        "q": "How many days are in February in a leap year?",
+        "a": "28",
+        "b": "29",
+        "c": "30",
+        "d": "31",
+        "ans": "B"
+      }
+    ],
+    "idx": 2,
+    "correct": 0
+  }
+}

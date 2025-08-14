@@ -85,8 +85,6 @@ export async function handleMessage(message, api) {
   const uid = message.data.uidFrom;
   const name = message.data.dName || "Không tên";
   const threadId = message.threadId;
-//console.log(message);
-//console.log("===RAW MESSAGE===", JSON.stringify(message, null, 2));
   if (uid) {
     const [userRow] = await query("SELECT mute, mute_expire FROM users WHERE uid = ? LIMIT 1", [uid]);
     if (userRow?.mute) {

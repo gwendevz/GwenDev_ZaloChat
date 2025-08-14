@@ -1,3 +1,4 @@
+// author @GwenDev
 import { query } from "../../App/Database.js";
 import { ThreadType } from "zca-js";
 import { dangKyReply } from "../../Handlers/HandleReply.js";
@@ -93,7 +94,7 @@ export default {
       .join("\n");
 
     const promptMsg = await api.sendMessage(
-      `Danh sách nhóm hiện có:\n${groupLines}\n\nReply bằng số thứ tự để chọn nhóm cần kết nối.`,
+      { msg: `Danh sách nhóm hiện có:\n${groupLines}\n\nReply bằng số thứ tự để chọn nhóm cần kết nối.`, ttl: 30*60_000 },
       adminThreadId,
       adminThreadType
     );
@@ -123,7 +124,7 @@ export default {
         const targetName = await getGroupName(targetThreadId);
 
         const connectMsg = await api.sendMessage(
-          `Quản trị viên muốn kết nối trò chuyện với nhóm "${targetName}".\nNếu đồng ý, reply "có". Nếu từ chối, reply "không".`,
+          { msg: `Quản trị viên muốn kết nối trò chuyện với nhóm "${targetName}".\nNếu đồng ý, reply "có". Nếu từ chối, reply "không".`, ttl: 30*60_000 },
           targetThreadId,
           targetThreadType
         );
@@ -148,12 +149,12 @@ export default {
               return { clear: false }; // ignore other messages
             }
             if (text === "không" || text === "khong") {
-              await api.sendMessage("Nhóm đã từ chối kết nối.", d.adminThreadId, d.adminThreadType);
-              await api.sendMessage("Đã từ chối kết nối với quản trị viên.", d.targetThreadId, d.targetThreadType);
+              await api.sendMessage({ msg: "Nhóm đã từ chối kết nối.", ttl: 30*60_000 }, d.adminThreadId, d.adminThreadType);
+              await api.sendMessage({ msg: "Đã từ chối kết nối với quản trị viên.", ttl: 30*60_000 }, d.targetThreadId, d.targetThreadType);
               return { clear: true };
             }
             await api.sendMessage(
-              `Nhóm "${d.targetName}" đã đồng ý kết nối. Reply tin nhắn này để trò chuyện.`,
+              { msg: `Nhóm "${d.targetName}" đã đồng ý kết nối. Reply tin nhắn này để trò chuyện.`, ttl: 30*60_000 },
               d.adminThreadId,
               d.adminThreadType
             ).then((admSent) => {
@@ -173,7 +174,7 @@ export default {
             });
 
             await api.sendMessage(
-              `Đã kết nối với quản trị viên. Reply tin nhắn này để trò chuyện.`,
+              { msg: `Đã kết nối với quản trị viên. Reply tin nhắn này để trò chuyện.`, ttl: 30*60_000 },
               d.targetThreadId,
               d.targetThreadType
             ).then((grpSent) => {
@@ -197,7 +198,7 @@ export default {
         });
 
         await api.sendMessage(
-          `Đã gửi yêu cầu kết nối đến nhóm "${targetName}". Đợi họ phản hồi...`,
+          { msg: `Đã gửi yêu cầu kết nối đến nhóm "${targetName}". Đợi họ phản hồi...`, ttl: 30*60_000 },
           adminThreadId,
           adminThreadType
         );

@@ -1,4 +1,4 @@
-// author @GwenDev (đã chỉnh sửa bỏ reaction)
+// author @GwenDev
 import { query } from "../../App/Database.js";
 import { dangKyReply } from "../../Handlers/HandleReply.js";
 import fs from "fs";
@@ -109,7 +109,6 @@ export default {
         const threadType = message.type;
         const uid = message.data?.uidFrom;
 
-        // Kiểm tra user có tồn tại trong database không
         const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
         if (!userExists) {
             return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);
@@ -119,7 +118,7 @@ export default {
 
         const workMessage = `🧾 𝐃𝐚𝐧𝐡 𝐒𝐚́𝐜𝐡 𝐂𝐨̂𝐧𝐠 𝐕𝐢𝐞̣̂𝐜.\n${workList}\n⋆─────────────⋆\n• Reply+ STT Để Chọn Công Việc\n• Thời Gian Hồi Sức Là 2 Giờ\n• Có Tỉ Lệ Gặp Tai Nạn Khi Làm Việc`;
 
-        const res = await api.sendMessage(workMessage, threadId, threadType);
+        const res = await api.sendMessage({ msg: workMessage, ttl: 2*60*60_000 }, threadId, threadType);
         const msgId = res?.message?.msgId ?? res?.msgId ?? null;
         const cliMsgId = res?.message?.cliMsgId ?? res?.cliMsgId ?? null;
 
@@ -135,7 +134,7 @@ export default {
                 const replyThreadId = message.threadId;
 
                 if (isNaN(replyNumber) || replyNumber < 1 || replyNumber > works.length) {
-                    await api.sendMessage(" Số thứ tự không hợp lệ! Vui lòng chọn từ 1-4.", replyThreadId, message.type);
+                    await api.sendMessage({ msg: " Số thứ tự không hợp lệ! Vui lòng chọn từ 1-4.", ttl: 2*60*60_000 }, replyThreadId, message.type);
                     return { clear: false };
                 }
 
@@ -145,17 +144,13 @@ export default {
                 const cooldownTime = 2 * 60 * 60 * 1000;
 
                 if (!user) {
-                    await api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", replyThreadId, message.type);
+                    await api.sendMessage({ msg: "Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", ttl: 2*60*60_000 }, replyThreadId, message.type);
                     return { clear: false };
                 }
 
                 if (user.work_cooldown && now < user.work_cooldown) {
                     const remaining = user.work_cooldown - now;
-                    await api.sendMessage(
-                        ` Bạn cần chờ ${formatTime(remaining)} để làm việc tiếp theo!`,
-                        replyThreadId,
-                        message.type
-                    );
+                    await api.sendMessage({ msg: ` Bạn cần chờ ${formatTime(remaining)} để làm việc tiếp theo!`, ttl: 2*60*60_000 }, replyThreadId, message.type);
                     return { clear: false };
                 }
 
@@ -164,11 +159,7 @@ export default {
                     [now + cooldownTime, senderUid]
                 );
 
-                const workingMsg = await api.sendMessage(
-                    ` Đang ${work.name}...`,
-                    replyThreadId,
-                    message.type
-                );
+                const workingMsg = await api.sendMessage({ msg: ` Đang ${work.name}...`, ttl: 2*60*60_000 }, replyThreadId, message.type);
 
                 await new Promise(resolve => setTimeout(resolve, 3500));
 
@@ -179,7 +170,7 @@ export default {
                             cliMsgId: workingMsg.cliMsgId || 0 
                         }, replyThreadId, message.type);
                     } catch {}
-                    await api.sendMessage(`⚠️ Ôi Không Bạn Gặp Tai Nạn Trong Lúc Làm Việc.`, replyThreadId, message.type);
+                    await api.sendMessage({ msg: `⚠️ Ôi Không Bạn Gặp Tai Nạn Trong Lúc Làm Việc.`, ttl: 2*60*60_000 }, replyThreadId, message.type);
                     return { clear: true };
                 }
 
@@ -189,7 +180,7 @@ export default {
                 const resultMessage = `${work.prefixMsg} ${result[0]}\n💵 Nhận Được: ${money.toLocaleString()}$\n💳 Tiền Đã Được Đưa Vào Ngân Hàng Của Bạn`;
 
                 await query(
-                    "UPDATE users SET vnd = vnd + ? WHERE uid = ?",
+                    "UPDATE users SET coins = coins + ? WHERE uid = ?",
                     [money, senderUid]
                 );
 
@@ -220,15 +211,16 @@ export default {
 
                         await api.sendMessage({
                             msg: resultMessage,
-                            attachments: [filePath]
+                            attachments: [filePath],
+                            ttl: 2*60*60_000
                         }, replyThreadId, message.type);
 
                         await fsp.unlink(filePath).catch(() => {});
                     } catch {
-                        await api.sendMessage(resultMessage, replyThreadId, message.type);
+                        await api.sendMessage({ msg: resultMessage, ttl: 2*60*60_000 }, replyThreadId, message.type);
                     }
                 } else {
-                    await api.sendMessage(resultMessage, replyThreadId, message.type);
+                    await api.sendMessage({ msg: resultMessage, ttl: 2*60*60_000 }, replyThreadId, message.type);
                 }
 
                 return { clear: true };

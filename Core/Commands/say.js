@@ -1,3 +1,4 @@
+// author @GwenDev
 import axios from "axios";
 import path from "path";
 import fs from "fs";
@@ -47,7 +48,7 @@ export default {
         "",
         "Hoặc gõ: .say list để xem lại danh sách.",
       ].join("\n");
-      return api.sendMessage(helpLines, threadId, threadType);
+      return api.sendMessage({ msg: helpLines, ttl: 12*60*60_000 }, threadId, threadType);
     }
 
     if (args.length === 1 && /^(langs?|languages?|list)$/i.test(args[0])) {
@@ -66,7 +67,7 @@ export default {
         "pt-BR – Português (Brazil)",
         "➜ Dùng: .say <lang> <text> (vd: .say ja ohayo)",
       ].join("\n");
-      return api.sendMessage(langsHelp, threadId, threadType);
+      return api.sendMessage({ msg: langsHelp, ttl: 12*60*60_000 }, threadId, threadType);
     }
 
     let lang = "vi";
@@ -78,13 +79,12 @@ export default {
 
     const text = textArgs.join(" ").trim();
     if (!text) {
-      return api.sendMessage(" Văn bản không được để trống.", threadId, threadType);
+      return api.sendMessage({ msg: " Văn bản không được để trống.", ttl: 12*60*60_000 }, threadId, threadType);
     }
 
     try {
       const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
 
-     // const processingMsg = await api.sendMessage(`⏳ Đang tạo voice cho: \"${text}\"`, threadId, threadType);
 
       const cacheDir = path.join("Data", "Cache");
       fs.mkdirSync(cacheDir, { recursive: true });
@@ -102,7 +102,7 @@ export default {
         throw new Error("Upload voice thất bại.");
       }
       const voiceUrl = `${voiceData.fileUrl}/${voiceData.fileName}`;
-      await api.sendVoice({ voiceUrl, ttl: 900_000 }, threadId, threadType);
+      await api.sendVoice({ voiceUrl, ttl: 12*60*60_000 }, threadId, threadType);
 
       try {
         if (processingMsg?.msgId) {
@@ -118,7 +118,7 @@ export default {
       }, 5000);
     } catch (err) {
       console.error("[say] error:", err?.message || err);
-      return api.sendMessage(" Đã xảy ra lỗi khi tạo hoặc gửi voice.", threadId, threadType);
+      return api.sendMessage({ msg: " Đã xảy ra lỗi khi tạo hoặc gửi voice.", ttl: 12*60*60_000 }, threadId, threadType);
     }
   },
 };

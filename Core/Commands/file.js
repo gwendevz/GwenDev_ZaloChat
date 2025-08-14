@@ -18,7 +18,7 @@ export default {
     const startDir = args[0] ? path.resolve(args.join(" ")) : process.cwd();
 
     if (!fs.existsSync(startDir) || !fs.statSync(startDir).isDirectory()) {
-      return api.sendMessage("Đường dẫn không hợp lệ hoặc không phải thư mục.", threadId, threadType);
+      return api.sendMessage({ msg: "Đường dẫn không hợp lệ hoặc không phải thư mục.", ttl: 12*60*60_000 }, threadId, threadType);
     }
 
     function shouldHide(name) {
@@ -57,7 +57,7 @@ export default {
         const itemsAll = fs.readdirSync(dir);
         const items = itemsAll.filter(name => !shouldHide(name));
         if (items.length === 0) {
-          await api.sendMessage("(Thư mục trống hoặc tất cả mục bị ẩn)", threadId, threadType);
+          await api.sendMessage({ msg: "(Thư mục trống hoặc tất cả mục bị ẩn)", ttl: 12*60*60_000 }, threadId, threadType);
           return;
         }
         let totalSize = 0;
@@ -72,7 +72,7 @@ export default {
         lines.push(`\nTổng dung lượng: ${formatSize(totalSize)}`);
         lines.push(`Đường dẫn: ${dir}`);
         lines.push("\nHướng dẫn: reply 'open <số>' để mở file/folder, 'del <số>' để xóa, 'back' để về thư mục trước, 'root' trở về gốc.");
-        const sent = await api.sendMessage(lines.join("\n"), threadId, threadType);
+        const sent = await api.sendMessage({ msg: lines.join("\n"), ttl: 12*60*60_000 }, threadId, threadType);
         const msgId = sent?.message?.msgId ?? sent?.msgId ?? null;
         const cliMsgId = sent?.message?.cliMsgId ?? sent?.cliMsgId ?? null;
         if (msgId || cliMsgId) {
@@ -98,12 +98,12 @@ export default {
                 const idx = parseInt(delMatch[1], 10) - 1;
                 const list = fs.readdirSync(data.currentDir).filter(name => !shouldHide(name));
                 if (idx < 0 || idx >= list.length) {
-                  await api.sendMessage("Số thứ tự không tồn tại.", threadId, threadType);
+                  await api.sendMessage({ msg: "Số thứ tự không tồn tại.", ttl: 12*60*60_000 }, threadId, threadType);
                   return { clear: false };
                 }
                 const name = list[idx];
                 if (shouldHide(name)) {
-                  await api.sendMessage("Mục này bị ẩn và không thể xóa.", threadId, threadType);
+                  await api.sendMessage({ msg: "Mục này bị ẩn và không thể xóa.", ttl: 12*60*60_000 }, threadId, threadType);
                   return { clear: false };
                 }
                 const targetPath = path.join(data.currentDir, name);
@@ -114,22 +114,22 @@ export default {
                   } else {
                     fs.unlinkSync(targetPath);
                   }
-                  await api.sendMessage(`Đã xóa: ${name}`, threadId, threadType);
+                  await api.sendMessage({ msg: `Đã xóa: ${name}`, ttl: 12*60*60_000 }, threadId, threadType);
                 } catch (e) {
-                  await api.sendMessage(`Không thể xóa: ${name}`, threadId, threadType);
+                  await api.sendMessage({ msg: `Không thể xóa: ${name}`, ttl: 12*60*60_000 }, threadId, threadType);
                 }
                 return await sendListing(data.currentDir, repMsg);
               }
 
               const match = input.match(/^(open\s+)?(\d+)/);
               if (!match) {
-                await api.sendMessage("Cú pháp không hợp lệ. Dùng 'open <số>' hoặc 'del <số>'.", threadId, threadType);
+                await api.sendMessage({ msg: "Cú pháp không hợp lệ. Dùng 'open <số>' hoặc 'del <số>'.", ttl: 12*60*60_000 }, threadId, threadType);
                 return { clear: false };
               }
               const idx = parseInt(match[2], 10) - 1;
               const list = fs.readdirSync(data.currentDir).filter(name => !shouldHide(name));
               if (idx < 0 || idx >= list.length) {
-                await api.sendMessage("Số thứ tự không tồn tại.", threadId, threadType);
+                await api.sendMessage({ msg: "Số thứ tự không tồn tại.", ttl: 12*60*60_000 }, threadId, threadType);
                 return { clear: false };
               }
               const targetName = list[idx];
@@ -139,9 +139,9 @@ export default {
                 return await sendListing(targetPath, repMsg);
               }
               try {
-                await api.sendMessage({ msg: `📄 ${targetName}`, attachments: [targetPath] }, threadId, threadType);
+                await api.sendMessage({ msg: `📄 ${targetName}`, attachments: [targetPath], ttl: 12*60*60_000 }, threadId, threadType);
               } catch (e) {
-                await api.sendMessage("Không thể gửi file (có thể quá lớn hoặc lỗi).", threadId, threadType);
+                await api.sendMessage({ msg: "Không thể gửi file (có thể quá lớn hoặc lỗi).", ttl: 12*60*60_000 }, threadId, threadType);
               }
               return { clear: false };
             },
@@ -149,7 +149,7 @@ export default {
         }
       } catch (err) {
         console.error("[file cmd] error:", err);
-        await api.sendMessage("Đã xảy ra lỗi.", threadId, threadType);
+        await api.sendMessage({ msg: "Đã xảy ra lỗi.", ttl: 12*60*60_000 }, threadId, threadType);
       }
     }
   },

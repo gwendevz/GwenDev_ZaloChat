@@ -1,3 +1,4 @@
+// author @GwenDev
 import fs from "fs";
 import path from "path";
 import { createCanvas, loadImage } from "canvas";
@@ -46,10 +47,10 @@ export default {
     const threadType = message.type ?? ThreadType.User;
     const uid = message.data?.uidFrom;
 
-    if (sub === 'start' || sub === 'play') {
+    if (sub === 'play') {
       if (ACTIVE_GAMES.has(threadId)) {
         return api.sendMessage(
-          '[ HELP ] • Đang Có Người Diễn Ra Trò Chơi Trên Nhóm Này',
+          { msg: '[ HELP ] • Đang Có Người Diễn Ra Trò Chơi Trên Nhóm Này', ttl: 60_000 },
           threadId,
           threadType
         );
@@ -61,7 +62,7 @@ export default {
         '3) Hard',
         '❓ Trả lời 1-3 hoặc easy/normal/hard'
       ].join('\n');
-      const sent = await api.sendMessage(pickMsg, threadId, threadType);
+      const sent = await api.sendMessage({ msg: pickMsg, ttl: 60_000 }, threadId, threadType);
       const msgId = sent?.message?.msgId ?? sent?.msgId ?? null;
       const cliMsgId = sent?.message?.cliMsgId ?? sent?.cliMsgId ?? 0;
       const parseMode = (txt) => {
@@ -82,7 +83,7 @@ export default {
         DATASET = null;
         const dataset = loadDataset(fp);
         if (!Array.isArray(dataset) || dataset.length === 0) {
-          return api.sendMessage("Dataset rỗng hoặc không đọc được.", threadId, threadType);
+          return api.sendMessage({ msg: "Dataset rỗng hoặc không đọc được.", ttl: 60_000 }, threadId, threadType);
         }
         const QUESTIONS = [...dataset];
         QUESTIONS.sort(() => Math.random() - 0.5);
@@ -221,7 +222,7 @@ export default {
               if (game.timerId) { try { clearTimeout(game.timerId); } catch {} game.timerId = null; }
               const ans = content.trim().toLowerCase();
               if (ans === '50' || ans === '5050') {
-                if (game.lifeline5050) { await api.sendMessage('[ HELP ] • Bạn Đã Sử Dụng Quyền Hạn 5050', threadId, threadType); return { clear: false }; }
+                if (game.lifeline5050) { await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Sử Dụng Quyền Hạn 5050', ttl: 60_000 }, threadId, threadType); return { clear: false }; }
                 game.lifeline5050 = true;
                 const wrongIdx = [0,1,2,3].filter(i=>i!==qObj._displayCorrect && qObj._displayChoices[i] !== '---');
                 wrongIdx.sort(()=>Math.random()-0.5);
@@ -232,37 +233,37 @@ export default {
               }
               if (ans === 'stop') {
                 if (game.timerId) { try { clearTimeout(game.timerId);} catch{} }
-                await api.sendMessage(`[ WIN ] •  Chúc Mừng Bạn Đã Dừng Cuộc Chơi Và Nhận Về: ${game.winnings.toLocaleString()}$`, threadId, threadType);
+                await api.sendMessage({ msg: `[ WIN ] •  Chúc Mừng Bạn Đã Dừng Cuộc Chơi Và Nhận Về: ${game.winnings.toLocaleString()}$`, ttl: 60_000 }, threadId, threadType);
                 ACTIVE_GAMES.delete(threadId); clearPendingReply(threadId); return { clear: true };
               }
               if (ans === 'call' || ans === '📞') {
-                if (game.lifelineCall) { await api.sendMessage('[ HELP ] • Bạn Đã Dùng Quyền Hạn Gọi Người Thân Rồi', threadId, threadType); return { clear:false }; }
-                game.lifelineCall = true; const letter = letters[qObj._displayCorrect]; await api.sendMessage(`📞 Người thân nghĩ đáp án đúng là: ${letter}`, threadId, threadType); return { clear:false };
+                if (game.lifelineCall) { await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Dùng Quyền Hạn Gọi Người Thân Rồi', ttl: 60_000 }, threadId, threadType); return { clear:false }; }
+                game.lifelineCall = true; const letter = letters[qObj._displayCorrect]; await api.sendMessage({ msg: `📞 Người thân nghĩ đáp án đúng là: ${letter}`, ttl: 60_000 }, threadId, threadType); return { clear:false };
               }
               if (ans === 'ask' || ans === '👥') {
-                if (game.lifelineAudience) { await api.sendMessage('[ HELP ] • Bạn Đã Dùng Quyền Hạn Hỏi Khán Giả Rồi', threadId, threadType); return { clear:false }; }
+                if (game.lifelineAudience) { await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Dùng Quyền Hạn Hỏi Khán Giả Rồi', ttl: 60_000 }, threadId, threadType); return { clear:false }; }
                 game.lifelineAudience = true; const perc = [0,0,0,0]; perc[qObj._displayCorrect] = 40; let remain = 60; const others = [0,1,2,3].filter(i=>i!==qObj._displayCorrect);
                 others.forEach((i,idx)=>{ const val = idx<others.length-1? Math.floor(Math.random()*remain):remain; perc[i]=val; remain-=val; });
-                const msgPoll = perc.map((p,i)=>`${letters[i]}: ${p}%`).join('\n'); await api.sendMessage(`👥 Khán giả bình chọn:\n${msgPoll}`, threadId, threadType); return { clear:false };
+                const msgPoll = perc.map((p,i)=>`${letters[i]}: ${p}%`).join('\n'); await api.sendMessage({ msg: `👥 Khán giả bình chọn:\n${msgPoll}`, ttl: 60_000 }, threadId, threadType); return { clear:false };
               }
               const map = { a:0,b:1,c:2,d:3, '1':0,'2':1,'3':2,'4':3 };
-              if (!(ans in map)) { await api.sendMessage('⚙️ Vui Lòng Reply Tin Nhắn Bot\n•  A B C D -> Trả Lời Câu Hỏi\n•  call -> Gọi Trợ Giúp Người Thân\n•  ask -> Hỏi Ý Kiến Khán Giả\n•  stop -> Dừng Cuộc Chơi & Nhận Thưởng', threadId, threadType); return { clear: false }; }
+              if (!(ans in map)) { await api.sendMessage({ msg: '⚙️ Vui Lòng Reply Tin Nhắn Bot\n•  A B C D -> Trả Lời Câu Hỏi\n•  call -> Gọi Trợ Giúp Người Thân\n•  ask -> Hỏi Ý Kiến Khán Giả\n•  stop -> Dừng Cuộc Chơi & Nhận Thưởng', ttl: 60_000 }, threadId, threadType); return { clear: false }; }
               const choice = map[ans]; const correct = choice === qObj._displayCorrect;
               if (correct) {
                 const add = game.rewardArr[game.index] || 0; game.winnings += add; await query("UPDATE users SET coins = COALESCE(coins,0) + ? WHERE uid = ?", [add, uid]);
                 if (game.index + 1 >= maxQ) {
-                  await api.sendMessage(`[ SUPER ] • Chúc Mừng Bạn Trở Thành Triệu Phú Và Nhận Về: ${game.winnings.toLocaleString()}$`, threadId, threadType);
+                  await api.sendMessage({ msg: `[ SUPER ] • Chúc Mừng Bạn Trở Thành Triệu Phú Và Nhận Về: ${game.winnings.toLocaleString()}$`, ttl: 60_000 }, threadId, threadType);
                   await query('UPDATE users SET altp_max = GREATEST(COALESCE(altp_max,0), ?) WHERE uid = ?', [game.index, uid]);
                   ACTIVE_GAMES.delete(threadId); clearPendingReply(threadId); return { clear: true };
                 }
                 game.index += 1; await query('UPDATE users SET altp_max = GREATEST(COALESCE(altp_max,0), ?) WHERE uid = ?', [game.index, uid]); await sendQ(); return { clear: true };
               }
-              await api.sendMessage(`[ LOSE ] • Bạn Đã Thua Cuộc. Đáp Án Đúng Là: ${letters[qObj._displayCorrect]}`, threadId, threadType);
+              await api.sendMessage({ msg: `[ LOSE ] • Bạn Đã Thua Cuộc. Đáp Án Đúng Là: ${letters[qObj._displayCorrect]}`, ttl: 60_000 }, threadId, threadType);
               ACTIVE_GAMES.delete(threadId); clearPendingReply(threadId); return { clear: true };
             },
           });
           game.timerId = setTimeout(async () => {
-            try { await api.sendMessage('[ LOSE ] • Bạn Đã Thua Cuộc Do Quá Thời Gian Trả Lời (60s).', threadId, threadType); } catch {}
+            try { await api.sendMessage({ msg: '[ LOSE ] • Bạn Đã Thua Cuộc Do Quá Thời Gian Trả Lời (60s).', ttl: 60_000 }, threadId, threadType); } catch {}
             ACTIVE_GAMES.delete(threadId); clearPendingReply(threadId);
           }, 60_000);
           setTimeout(() => { fs.promises.unlink(imgPath).catch(() => {}); }, 60_000);
@@ -274,7 +275,7 @@ export default {
         msgId, cliMsgId, threadId, authorId: uid, command: 'ailtp',
         onReply: async ({ content }) => {
           const mode = parseMode(content);
-          if (!mode) { await api.sendMessage('Vui lòng chọn: 1 (Easy) / 2 (Normal) / 3 (Hard)', threadId, threadType); return { clear: false }; }
+          if (!mode) { await api.sendMessage({ msg: 'Vui lòng chọn: 1 (Easy) / 2 (Normal) / 3 (Hard)', ttl: 60_000 }, threadId, threadType); return { clear: false }; }
           await startWithMode(mode);
           return { clear: true };
         }
@@ -284,7 +285,7 @@ export default {
 
     if (!sub || sub === 'help') {
       return api.sendMessage(
-        [
+        { msg: [
           '🎮 MiniGame Ai Là Triệu Phú',
           '⋆────────────────⋆',
           '⚙️ Usage',
@@ -298,7 +299,7 @@ export default {
           'stop -> Dừng Trò Chơi & Nhận Thưởng',
           '',
           '❓ Hãy Là Người Chơi - Đừng Can Thiệp AI ❤️'
-        ].join('\n'),
+        ].join('\n'), ttl: 60_000 },
         threadId,
         threadType
       );
@@ -308,7 +309,7 @@ export default {
       try {
         const rows = await query('SELECT uid, name, altp_max FROM users WHERE altp_max IS NOT NULL ORDER BY altp_max DESC LIMIT 10');
         if (!rows.length) {
-          return api.sendMessage('Chưa có dữ liệu bảng xếp hạng.', threadId, threadType);
+        return api.sendMessage({ msg: 'Chưa có dữ liệu bảng xếp hạng.', ttl: 60_000 }, threadId, threadType);
         }
 
         const uids = rows.map(r => r.uid);
@@ -380,7 +381,7 @@ export default {
         const file = path.join(dir, `altp_rank_${Date.now()}.png`);
         fs.writeFileSync(file, canvas.toBuffer('image/png'));
 
-        const result = await api.sendMessage({ msg: '🏆 Bảng Xếp Hạng Ai Là Triệu Phú', attachments: [file] }, threadId, threadType);
+        const result = await api.sendMessage({ msg: '🏆 Bảng Xếp Hạng Ai Là Triệu Phú', attachments: [file], ttl: 60_000 }, threadId, threadType);
 
         try {
           if (fs.existsSync(file)) await fs.promises.unlink(file).catch(() => {});
@@ -388,12 +389,12 @@ export default {
 
         return result;
       } catch (err) {
-        return api.sendMessage('Lỗi lấy bảng xếp hạng.', threadId, threadType);
+        return api.sendMessage({ msg: 'Lỗi lấy bảng xếp hạng.', ttl: 60_000 }, threadId, threadType);
       }
     }
     const dataset = loadDataset(path.join(DATA_DIR, 'questions_normal.json'));
     if (!Array.isArray(dataset) || dataset.length === 0) {
-      return api.sendMessage("Dataset rỗng hoặc không đọc được.", threadId, threadType);
+      return api.sendMessage({ msg: "Dataset rỗng hoặc không đọc được.", ttl: 60_000 }, threadId, threadType);
     }
     const QUESTIONS = [...dataset]; QUESTIONS.sort(() => Math.random() - 0.5);
     const maxQ = Math.min(15, QUESTIONS.length);
@@ -574,7 +575,7 @@ export default {
           const ans = content.trim().toLowerCase();
           if (ans === '50' || ans === '5050') {
             if (game.lifeline5050) {
-              await api.sendMessage('[ HELP ] • Bạn Đã Sử Dụng Quyền Hạn 5050', threadId, threadType);
+              await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Sử Dụng Quyền Hạn 5050', ttl: 60_000 }, threadId, threadType);
               return { clear: false };
             }
             game.lifeline5050 = true;
@@ -594,18 +595,18 @@ export default {
           }
           if (ans === 'call' || ans === '📞') {
             if (game.lifelineCall) {
-              await api.sendMessage('[ HELP ] • Bạn Đã Dùng Quyền Hạn Gọi Người Thân Rồi', threadId, threadType);
+              await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Dùng Quyền Hạn Gọi Người Thân Rồi', ttl: 60_000 }, threadId, threadType);
               return { clear:false };
             }
             game.lifelineCall = true;
             const letter = letters[qObj._displayCorrect];
-            await api.sendMessage(`📞 Người thân nghĩ đáp án đúng là: ${letter}`, threadId, threadType);
+            await api.sendMessage({ msg: `📞 Người thân nghĩ đáp án đúng là: ${letter}`, ttl: 60_000 }, threadId, threadType);
             return { clear:false };
           }
 
           if (ans === 'ask' || ans === '👥') {
             if (game.lifelineAudience) {
-              await api.sendMessage('[ HELP ] • Bạn Đã Dùng Quyền Hạn Hỏi Khán Giả Rồi', threadId, threadType);
+              await api.sendMessage({ msg: '[ HELP ] • Bạn Đã Dùng Quyền Hạn Hỏi Khán Giả Rồi', ttl: 60_000 }, threadId, threadType);
               return { clear:false };
             }
             game.lifelineAudience = true;
@@ -620,15 +621,15 @@ export default {
               remain-=val;
             });
             const msgPoll = perc.map((p,i)=>`${letters[i]}: ${p}%`).join('\n');
-            await api.sendMessage(`👥 Khán giả bình chọn:
-${msgPoll}`, threadId, threadType);
+            await api.sendMessage({ msg: `👥 Khán giả bình chọn:
+${msgPoll}`, ttl: 60_000 }, threadId, threadType);
             return { clear:false };
           }
           const map = { a: 0, b: 1, c: 2, d: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
 
           console.log("[AILTP] User reply:", ans, "| uid:", uid);
           if (!(ans in map)) {
-            await api.sendMessage('⚙️ Vui Lòng Reply Tin Nhắn Bot\n•  A B C D -> Trả Lời Câu Hỏi\n•  call -> Gọi Trợ Giúp Người Thân\n•  ask -> Hỏi Ý Kiến Khán Giả\n•  stop -> Dừng Cuộc Chơi & Nhận Thưởng', threadId, threadType);
+            await api.sendMessage({ msg: '⚙️ Vui Lòng Reply Tin Nhắn Bot\n•  A B C D -> Trả Lời Câu Hỏi\n•  call -> Gọi Trợ Giúp Người Thân\n•  ask -> Hỏi Ý Kiến Khán Giả\n•  stop -> Dừng Cuộc Chơi & Nhận Thưởng', ttl: 60_000 }, threadId, threadType);
             return { clear: false };
           }
           const choice = map[ans];
@@ -638,7 +639,7 @@ ${msgPoll}`, threadId, threadType);
             game.winnings += add;
             await query("UPDATE users SET coins = COALESCE(coins,0) + ? WHERE uid = ?", [add, uid]);
             if (game.index + 1 >= maxQ) {
-              await api.sendMessage(`[ SUPER ] • Chúc Mừng Bạn Trở Thành Triệu Phú Và Nhận Về: ${game.winnings.toLocaleString()}$`, threadId, threadType);
+              await api.sendMessage({ msg: `[ SUPER ] • Chúc Mừng Bạn Trở Thành Triệu Phú Và Nhận Về: ${game.winnings.toLocaleString()}$`, ttl: 60_000 }, threadId, threadType);
               await query('UPDATE users SET altp_max = GREATEST(COALESCE(altp_max,0), ?) WHERE uid = ?', [game.index, uid]);
               ACTIVE_GAMES.delete(threadId);
               clearPendingReply(threadId);
@@ -649,7 +650,7 @@ ${msgPoll}`, threadId, threadType);
             await sendQ();
             return { clear: true };
           }
-          await api.sendMessage(`[ LOSE ] • Bạn Đã Thua Cuộc. Đáp Án Đúng Là: ${letters[qObj._displayCorrect]}`, threadId, threadType);
+          await api.sendMessage({ msg: `[ LOSE ] • Bạn Đã Thua Cuộc. Đáp Án Đúng Là: ${letters[qObj._displayCorrect]}`, ttl: 60_000 }, threadId, threadType);
           ACTIVE_GAMES.delete(threadId);
           clearPendingReply(threadId);
           return { clear: true };
@@ -658,7 +659,7 @@ ${msgPoll}`, threadId, threadType);
 
       game.timerId = setTimeout(async () => {
         try {
-          await api.sendMessage('[ LOSE ] • Bạn Đã Thua Cuộc Do Quá Thời Gian Trả Lời (60s).', threadId, threadType);
+          await api.sendMessage({ msg: '[ LOSE ] • Bạn Đã Thua Cuộc Do Quá Thời Gian Trả Lời (60s).', ttl: 60_000 }, threadId, threadType);
         } catch {}
         ACTIVE_GAMES.delete(threadId);
         clearPendingReply(threadId);

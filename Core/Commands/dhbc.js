@@ -1,3 +1,4 @@
+// author @GwenDev
 import axios from "axios";
 import fs from "fs";
 import fsp from "fs/promises";
@@ -10,6 +11,11 @@ import {
 import { setPendingReply } from "../../Handlers/HandleReply.js";
 import { log } from "../../Utils/Logger.js";
 import { createCanvas, loadImage } from "canvas";
+let sharpMod = null;
+try {
+  const m = await import("sharp");
+  sharpMod = m?.default || m;
+} catch {}
 
 const COINS_UP = 10_000; 
 const COINS_DOWN = 5_000; 
@@ -90,6 +96,28 @@ async function downloadImage(url, dir, filename) {
   return filePath;
 }
 
+async function reencodeToPng(inputPath) {
+  const outPath = inputPath.endsWith(".png") ? inputPath : inputPath.replace(/\.[^\.]+$/i, ".png");
+  if (sharpMod) {
+    try {
+      const buf = await fsp.readFile(inputPath);
+      await sharpMod(buf).png().toFile(outPath);
+      return outPath;
+    } catch {}
+  }
+  try {
+    const img = await loadImage(inputPath);
+    const canvas = createCanvas(img.width, img.height);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    const png = canvas.toBuffer("image/png");
+    await fsp.writeFile(outPath, png);
+    return outPath;
+  } catch {
+    return null;
+  }
+}
+
 async function combineImages(p1, p2, outPath) {
   const [img1, img2] = await Promise.all([loadImage(p1), loadImage(p2)]);
   const SEP = 6; 
@@ -106,6 +134,16 @@ async function combineImages(p1, p2, outPath) {
   return outPath;
 }
 
+async function wrapSingleImage(pngPath, outPath) {
+  const img = await loadImage(pngPath);
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  const buf = canvas.toBuffer("image/png");
+  await fsp.writeFile(outPath, buf);
+  return outPath;
+}
+
 async function startGame({ api, threadId, threadType, uid, userName, messageId }) {
  
   const list = await loadDataset();
@@ -117,32 +155,52 @@ async function startGame({ api, threadId, threadType, uid, userName, messageId }
   const sokitu = data.sokitu || "?";
 
   const cacheDir = path.resolve("Data", "Cache");
-  const files = [];
+  const rawFiles = [];
+  const pngFiles = [];
   const safeDownload = async (urlImg, name) => {
     try {
-      return await downloadImage(urlImg, cacheDir, name);
+      const raw = await downloadImage(urlImg, cacheDir, name);
+      return raw;
     } catch (e) {
-       return null;
+      return null;
     }
   };
-  const fp1 = await safeDownload(data.link1, `dhbc_${Date.now()}_1.png`);
-  const fp2 = await safeDownload(data.link2, `dhbc_${Date.now()}_2.png`);
-  if (fp1) files.push(fp1);
-  if (fp2) files.push(fp2);
+  const ts = Date.now();
+  const fp1 = await safeDownload(data.link1, `dhbc_${ts}_1`);
+  const fp2 = await safeDownload(data.link2, `dhbc_${ts}_2`);
+  if (fp1) rawFiles.push(fp1);
+  if (fp2) rawFiles.push(fp2);
 
-  if (files.length === 0) {
+  if (rawFiles.length === 0) {
     await api.sendMessage("búg", threadId, threadType);
     return;
   }
-  let attachmentsToSend = files;
+  for (const rf of rawFiles) {
+    const out = await reencodeToPng(rf);
+    if (out) pngFiles.push(out);
+  }
+  if (pngFiles.length === 0) {
+    await api.sendMessage("Không tải được ảnh hợp lệ.", threadId, threadType);
+    return;
+  }
+
+  let attachmentsToSend = pngFiles;
   let combinedPath = null;
-  if (files.length >= 2) {
+  if (pngFiles.length >= 2) {
     combinedPath = path.join(cacheDir, `dhbc_${Date.now()}_comb.png`);
     try {
-      await combineImages(files[0], files[1], combinedPath);
+      await combineImages(pngFiles[0], pngFiles[1], combinedPath);
       attachmentsToSend = [combinedPath];
     } catch (e) {
-       attachmentsToSend = files;
+      attachmentsToSend = pngFiles;
+    }
+  } else if (pngFiles.length === 1) {
+    combinedPath = path.join(cacheDir, `dhbc_${Date.now()}_single.png`);
+    try {
+      await wrapSingleImage(pngFiles[0], combinedPath);
+      attachmentsToSend = [combinedPath];
+    } catch {
+      attachmentsToSend = pngFiles;
     }
   }
 
@@ -158,7 +216,12 @@ async function startGame({ api, threadId, threadType, uid, userName, messageId }
   );
 
   try {
-    for (const f of files) {
+    for (const f of rawFiles) {
+      if (fs.existsSync(f)) {
+        await fsp.unlink(f).catch(() => {});
+      }
+    }
+    for (const f of pngFiles) {
       if (fs.existsSync(f)) {
         await fsp.unlink(f).catch(() => {});
       }
@@ -265,7 +328,6 @@ export default {
       threadType = message.type ?? ThreadType.User,
       uid = message.data?.uidFrom;
     
-    // Kiểm tra user có tồn tại trong database không
     const [userExists] = await query("SELECT uid FROM users WHERE uid = ?", [uid]);
     if (!userExists) {
       return api.sendMessage("Bạn chưa có tài khoản trong hệ thống. Vui lòng tương tác với bot trước.", threadId, threadType);

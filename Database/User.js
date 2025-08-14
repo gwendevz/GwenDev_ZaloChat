@@ -12,6 +12,10 @@ export async function user(uid, name, threadId, threadName) {
        VALUES (?, ?, ?, ?, ?, 1, 1)`,
       [uid, name, JSON.stringify(data), threadId, threadName]
     );
+    // thêm vào bảng pokemon
+    try {
+      await query(`INSERT IGNORE INTO pokemon (uid, name) VALUES (?, ?)`, [uid, name]);
+    } catch {}
 
     log(`[ZALO] New User: ${name} (${uid})`, "new");
     return true;
@@ -40,6 +44,11 @@ export async function user(uid, name, threadId, threadName) {
      WHERE uid = ?`,
     [JSON.stringify(data), uid]
   );
+
+  // đảm bảo có bản ghi pokemon
+  try {
+    await query(`INSERT IGNORE INTO pokemon (uid, name) VALUES (?, ?)`, [uid, name]);
+  } catch {}
 
   return true;
 }
